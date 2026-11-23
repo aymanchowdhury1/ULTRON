@@ -1,0 +1,3532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PROJECT ULTRON</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./favicon-512.png" />
+  <link rel="apple-touch-icon" href="./favicon-512.png" />
+  <meta name="theme-color" content="#0d1424" />
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <style>
+    :root {
+      --bg: #060911;
+      --surface: #0d1424;
+      --surface-2: #141f36;
+      --surface-3: #1b2946;
+      --border: #223357;
+      --text: #edf2fc;
+      --muted: #8ea2c8;
+      --accent: #38bdf8;
+      --accent-2: #818cf8;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --radius: 14px;
+      --sidebar-w: 292px;
+      --font: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: radial-gradient(circle at 20% 0%, #101d3a 0%, var(--bg) 60%);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+
+    button, input, select, textarea { font-family: inherit; color: var(--text); }
+
+    button {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:hover { border-color: var(--accent); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), #0284c7);
+      border-color: transparent;
+      color: #03111f;
+      font-weight: 700;
+    }
+    button.danger {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+    }
+    button.warn-active {
+      background: rgba(245, 158, 11, 0.16);
+      border-color: var(--warn);
+      color: #fde68a;
+    }
+    button.ok-active {
+      background: rgba(34, 197, 94, 0.16);
+      border-color: var(--ok);
+      color: #86efac;
+    }
+
+    input, select, textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 11px;
+      font-size: 13px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+    /* ================= GOOGLE AUTH LOCK GATE ================= */
+    #authGate {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at 50% 15%, #122346 0%, #050811 70%);
+      overflow-y: auto;
+    }
+
+    .gate-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(13, 20, 36, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px 24px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .logo-ring {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #050914;
+      font-weight: 900;
+      font-size: 28px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 28px rgba(56, 189, 248, 0.4);
+    }
+
+    .gate-card h1 { font-size: 22px; letter-spacing: 0.1em; }
+    .gate-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    .google-btn {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 700;
+      background: #ffffff;
+      color: #111827;
+      border: none;
+    }
+    .google-btn:hover { background: #e2e8f0; border: none; }
+
+    .gate-status {
+      font-size: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #bae6fd;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+    .gate-status.err {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fecaca;
+    }
+
+    /* ================= MAIN APP SHELL ================= */
+    #appShell {
+      display: none;
+      height: 100vh;
+      height: 100dvh;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(11, 17, 31, 0.96);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      z-index: 40;
+    }
+
+    .brand-mini { display: flex; align-items: center; gap: 9px; }
+    .brand-mini-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #040914;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+    }
+    .brand-mini h2 { font-size: 14px; letter-spacing: 0.08em; }
+
+    .active-model-chip {
+      font-size: 11.5px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #7dd3fc;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .active-model-chip:hover { background: rgba(56, 189, 248, 0.24); }
+
+    .devices-strip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .dev-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-size: 11.5px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .dev-pill.selected {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.14);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+      flex-shrink: 0;
+    }
+    .status-dot.active {
+      background: var(--ok);
+      box-shadow: 0 0 8px var(--ok);
+    }
+    .dev-state-tag { font-size: 10px; color: var(--muted); }
+    .dev-pill.online .dev-state-tag { color: #86efac; }
+
+    .top-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+
+    .avatar-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 4px 10px 4px 5px;
+      border-radius: 999px;
+    }
+    .avatar-chip img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+
+    /* ================= WORKSPACE BODY (MODEL SLIDEBAR + CHAT) ================= */
+    .workspace-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      background: rgba(3, 6, 14, 0.65);
+      backdrop-filter: blur(3px);
+    }
+    .sidebar-backdrop.open { display: block; }
+
+    .model-sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: rgba(11, 17, 31, 0.97);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      transition: margin-left 0.22s ease, transform 0.22s ease;
+      z-index: 50;
+      overflow: hidden;
+    }
+    .model-sidebar.collapsed { margin-left: calc(var(--sidebar-w) * -1); }
+
+    
+    .sidebar-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 3px;
+    }
+    .sidebar-tabs button {
+      border: none;
+      background: transparent;
+      padding: 6px 4px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+    .sidebar-tabs button.active {
+      background: linear-gradient(135deg, var(--accent), #0284c7);
+      color: #03111f;
+      font-weight: 800;
+    }
+    .sidebar-pane {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .sidebar-pane.active { display: flex; }
+
+    .chat-thread-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 2px;
+    }
+    .chat-thread-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 9px;
+      cursor: pointer;
+    }
+    .chat-thread-item:hover { border-color: var(--accent); background: var(--surface-3); }
+    .chat-thread-item.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.16);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+    .chat-thread-title {
+      flex: 1;
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chat-thread-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .chat-thread-actions button {
+      padding: 3px 6px;
+      font-size: 11px;
+      border-radius: 7px;
+    }
+
+    .plugin-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 2px;
+    }
+    .plugin-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .plugin-card.enabled {
+      border-color: rgba(56, 189, 248, 0.55);
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .plugin-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .plugin-title { font-size: 12.5px; font-weight: 700; }
+    .plugin-desc { font-size: 11px; color: var(--muted); line-height: 1.35; }
+    .plugin-quick-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .plugin-quick-row button { padding: 4px 8px; font-size: 10.5px; border-radius: 7px; }
+
+    .plugin-action-card {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(56, 189, 248, 0.09);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sidebar-head h3 { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+    .sidebar-search { width: 100%; padding: 8px 10px; font-size: 12.5px; }
+    .sidebar-status { font-size: 11px; color: var(--muted); line-height: 1.35; }
+
+    .model-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+    .model-cat-title {
+      font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--muted); margin-top: 8px; margin-bottom: 2px; padding-left: 4px;
+    }
+    .model-cat-title:first-child { margin-top: 0; }
+
+    .model-item {
+      width: 100%; text-align: left; background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 11px; padding: 9px 10px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 3px; cursor: pointer;
+    }
+    .model-item:hover { border-color: var(--accent); background: var(--surface-3); }
+    .model-item.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.16);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+    .model-item-top { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .model-item-name { font-size: 12.5px; font-weight: 700; color: var(--text); }
+    .model-tag {
+      font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+      background: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); white-space: nowrap;
+    }
+    .model-tag.paid { background: rgba(129, 140, 248, 0.16); color: #c7d2fe; border-color: rgba(129, 140, 248, 0.35); }
+    .model-tag.img { background: rgba(245, 158, 11, 0.16); color: #fde68a; border-color: rgba(245, 158, 11, 0.35); }
+    .model-item-id { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+    .model-item-desc { font-size: 11px; color: #9fb2d4; font-weight: 400; }
+
+    .sidebar-custom-box { border-top: 1px solid var(--border); padding-top: 10px; display: flex; gap: 6px; }
+    .sidebar-custom-box input { flex: 1; padding: 7px 9px; font-size: 11.5px; font-family: var(--mono); }
+
+    /* ================= CHAT AREA ================= */
+    .chat-container {
+      flex: 1; display: flex; flex-direction: column;
+      max-width: 960px; width: 100%; margin: 0 auto; min-height: 0; padding: 0 14px;
+    }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 18px 4px;
+      display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth;
+    }
+
+    .msg {
+      max-width: 90%; padding: 12px 15px; border-radius: 16px;
+      font-size: 14px; line-height: 1.55; border: 1px solid var(--border); word-break: break-word;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(129, 140, 248, 0.16));
+      border-color: rgba(56, 189, 248, 0.4); border-bottom-right-radius: 4px;
+    }
+    .msg.bot {
+      align-self: flex-start; background: var(--surface);
+      border-bottom-left-radius: 4px; width: fit-content; max-width: 96%;
+    }
+    .msg-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; font-size: 11px; color: var(--muted); margin-bottom: 6px;
+    }
+    .route-badge {
+      padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 700;
+      background: rgba(56, 189, 248, 0.14); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .msg-body { white-space: pre-wrap; }
+    .msg-body a { color: #38bdf8; text-decoration: underline; word-break: break-all; }
+    .msg-body a:hover { color: #7dd3fc; }
+
+    .inline-preview {
+      margin-top: 10px; border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; background: #050811;
+    }
+    .inline-preview-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; background: var(--surface-2); font-size: 11.5px; color: var(--muted); gap: 8px;
+    }
+    .inline-preview iframe { width: 100%; height: 300px; border: 0; background: #ffffff; display: block; }
+    .inline-gen-img { display: block; max-width: 100%; max-height: 420px; margin: 0 auto; }
+    .inline-svg-wrap { padding: 12px; display: flex; justify-content: center; background: #080d1a; }
+    .inline-svg-wrap svg { max-width: 100%; max-height: 280px; }
+
+    .file-manifest {
+      margin-top: 8px;
+      background: #050811;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 11px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: #a5f3fc;
+      white-space: pre-wrap;
+    }
+
+    .approval-box {
+      margin-top: 10px; padding: 10px 12px; border-radius: 12px;
+      background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.45);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .approval-box code {
+      font-family: var(--mono); font-size: 11.5px; color: #fde68a;
+      background: rgba(0, 0, 0, 0.35); padding: 6px 8px; border-radius: 8px;
+      display: block; white-space: pre-wrap;
+    }
+
+    .msg-tools { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .msg-tools button { padding: 4px 9px; font-size: 11px; border-radius: 8px; }
+
+    /* ================= CHAT INPUT DOCK ================= */
+    .composer-wrap { flex-shrink: 0; padding: 10px 0 14px; }
+
+    .composer-card { position: relative; }
+    .suggest-popup {
+      display: none;
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: calc(100% + 8px);
+      background: rgba(11, 17, 31, 0.98);
+      border: 1px solid var(--accent);
+      border-radius: 14px;
+      padding: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
+      z-index: 60;
+    }
+    .suggest-popup.open { display: flex; flex-direction: column; gap: 4px; }
+    .suggest-header {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding: 4px 8px 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2px;
+    }
+    .suggest-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid transparent;
+      text-align: left;
+      width: 100%;
+    }
+    .suggest-item:hover, .suggest-item.selected {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+    .suggest-left { display: flex; align-items: center; gap: 8px; }
+    .suggest-cmd { font-family: var(--mono); font-size: 12.5px; font-weight: 800; color: #7dd3fc; }
+    .suggest-desc { font-size: 11.5px; color: var(--muted); }
+    .suggest-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.16);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      white-space: nowrap;
+    }
+    .suggest-badge.off {
+      background: rgba(148, 163, 184, 0.14);
+      color: #94a3b8;
+      border-color: rgba(148, 163, 184, 0.3);
+    }
+    .plugin-conn-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .plugin-status-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.14);
+      color: #94a3b8;
+    }
+    .plugin-status-pill.connected {
+      background: rgba(34, 197, 94, 0.16);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+    }
+
+    .composer-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 10px 12px; display: flex; flex-direction: column;
+      gap: 9px; box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+    }
+    .composer-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .mode-switch {
+      display: inline-flex; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 11px; padding: 3px; gap: 3px;
+    }
+    .mode-switch button {
+      border: none; background: transparent; padding: 6px 10px;
+      border-radius: 8px; font-size: 12px; color: var(--muted);
+    }
+    .mode-switch button.active {
+      background: linear-gradient(135deg, var(--accent), #0284c7);
+      color: #03111f; font-weight: 800;
+    }
+
+    .target-select-wrap {
+      display: inline-flex; align-items: center; gap: 6px;
+      flex: 1; justify-content: flex-end; min-width: 180px;
+    }
+    .target-select-wrap label { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+    .target-select-wrap select { max-width: 240px; padding: 6px 10px; font-size: 12px; border-radius: 9px; }
+
+    .composer-input-row { display: flex; align-items: flex-end; gap: 8px; }
+    #chatInput { flex: 1; resize: none; min-height: 42px; max-height: 140px; padding: 10px 12px; border-radius: 12px; line-height: 1.4; }
+    .attach-preview {
+      display: none; align-items: center; gap: 8px; font-size: 12px;
+      color: #7dd3fc; background: rgba(56, 189, 248, 0.1); padding: 5px 10px; border-radius: 8px;
+    }
+
+    /* ================= SETTINGS MODAL ================= */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 95;
+      background: rgba(4, 7, 15, 0.78); backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .field-group label { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    @media (max-width: 860px) {
+      .model-sidebar {
+        position: fixed; top: 0; bottom: 0; left: 0;
+        width: 85vw; max-width: 310px; min-width: 0;
+        margin-left: 0 !important; transform: translateX(-105%);
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.65);
+      }
+      .model-sidebar.mobile-open { transform: translateX(0); }
+      .two-col { grid-template-columns: 1fr; }
+      .topbar { padding: 8px 10px; }
+      .devices-strip { order: 3; width: 100%; justify-content: flex-start; }
+      .target-select-wrap { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= CLEAN GOOGLE SIGN-IN GATE ================= -->
+  <div id="authGate">
+    <div class="gate-card">
+      <div class="logo-ring" style="padding:0;overflow:hidden;background:#0d1424;"><img src="./favicon-512.png" alt="ULTRON" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.parentElement.textContent='U';" /></div>
+      <h1>PROJECT ULTRON</h1>
+      <p>Sign in with your Google Account to unlock autonomous AI project building and two-way PC &amp; Android control.</p>
+
+      <div id="gateStatus" class="gate-status">Ready. Click Sign in with Google to unlock ULTRON.</div>
+
+      <button id="switchLocalhostBtn" class="primary" style="display:none;">
+        Switch to http://localhost (Fixes Unauthorized Domain)
+      </button>
+
+      <button id="googleLoginBtn" class="google-btn">
+        <span>Sign in with Google</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MAIN APP SHELL ================= -->
+  <div id="appShell">
+    <header class="topbar">
+      <div class="brand-mini">
+        <button id="toggleSidebarBtn" title="Toggle Chats, Plugins &amp; Models">&#9776; Menu</button>
+        <div class="brand-mini-icon" style="padding:0;overflow:hidden;background:#0d1424;"><img src="./favicon-512.png" alt="ULTRON" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.parentElement.textContent='U';" /></div>
+        <h2>ULTRON</h2>
+        <span class="active-model-chip" id="activeModelChip" title="Click to open Model Slidebar">Gemini 3.8 Flash</span>
+      </div>
+
+      <div class="devices-strip" id="devicesStrip"></div>
+
+      <div class="top-actions">
+        <button id="permToggleBtn" class="warn-active" title="Toggle device action confirmation">Ask Each Time</button>
+        <button id="openSettingsBtn">&#9881; Settings</button>
+        <div class="avatar-chip" id="userChip">
+          <img id="userAvatar" src="" alt="" style="display:none;" />
+          <span id="userNameChip">Owner</span>
+        </div>
+        <button id="signOutBtn" class="danger">Sign Out</button>
+      </div>
+    </header>
+
+    <div class="workspace-body">
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+      <!-- ================= UNIFIED SLIDEBAR (CHATS | PLUGINS | MODELS) ================= -->
+      <aside class="model-sidebar" id="modelSidebar">
+        <div class="sidebar-head">
+          <h3>ULTRON Hub</h3>
+          <button id="closeSidebarBtn" style="padding:5px 8px;font-size:11.5px;" title="Hide Sidebar">&times;</button>
+        </div>
+
+        <div class="sidebar-tabs" id="sidebarTabs">
+          <button data-stab="chats" class="active">Chats</button>
+          <button data-stab="plugins">Plugins</button>
+          <button data-stab="models">Models</button>
+        </div>
+
+        <!-- PANE 1: MULTIPLE CHATS (CREATE / RENAME / DELETE / SYNC) -->
+        <div class="sidebar-pane active" id="stab-chats">
+          <button id="newChatBtn" class="primary" style="width:100%;">+ New Chat</button>
+          <div class="sidebar-status" id="chatSyncStatus">Synced across PC &amp; Phone.</div>
+          <div class="chat-thread-list" id="chatThreadList"></div>
+        </div>
+
+        <!-- PANE 2: PLUGINS (CANVA, GOOGLE DRIVE, GMAIL, GITHUB, YOUTUBE) -->
+        <div class="sidebar-pane" id="stab-plugins">
+          <div class="sidebar-status">Enable plugins so ULTRON can work with Canva, Drive, Gmail, GitHub &amp; YouTube on PC and Phone.</div>
+          <div class="plugin-list" id="pluginList"></div>
+        </div>
+
+        <!-- PANE 3: GEMINI API MODELS -->
+        <div class="sidebar-pane" id="stab-models">
+          <div style="display:flex;gap:6px;">
+            <input id="modelSearchInput" class="sidebar-search" placeholder="Search models..." style="flex:1;" />
+            <button id="refreshModelsBtn" style="padding:6px 9px;font-size:11.5px;" title="Fetch live models from your Gemini API key">&#8635; Sync</button>
+          </div>
+          <div class="sidebar-status" id="sidebarStatus">Pick any model below or click ↻ Sync.</div>
+          <div class="model-list" id="modelList"></div>
+          <div class="sidebar-custom-box">
+            <input id="customModelQuickInput" placeholder="Custom model ID..." />
+            <button id="applyCustomModelBtn" class="primary" style="padding:6px 10px;font-size:11.5px;">Use</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ================= CLEAN CHAT AREA ================= -->
+      <main class="chat-container">
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="composer-wrap">
+          <div class="composer-card">
+            <div class="suggest-popup" id="suggestPopup"></div>
+            <div class="composer-controls">
+              <div class="mode-switch" id="modeSwitch">
+                <button data-mode="online" title="Instant streaming AI response right in chat">1. Online</button>
+                <button data-mode="device" title="Build projects & execute directly on selected PC/Phone">2. Device</button>
+                <button data-mode="auto" class="active" title="AI automatically chooses Online, Full Project Build, or Device Action">3. Auto</button>
+              </div>
+
+              <div class="target-select-wrap">
+                <label for="targetDeviceSelect">Work on:</label>
+                <select id="targetDeviceSelect"></select>
+              </div>
+            </div>
+
+            <div class="attach-preview" id="attachPreview">
+              <span id="attachName"></span>
+              <button id="clearAttachBtn" style="padding:2px 7px;font-size:11px;">&times;</button>
+            </div>
+
+            <div class="composer-input-row">
+              <input type="file" id="chatFileInput" accept="image/*,text/*,.json,.html,.js,.py,.css,.kt,.xml" style="display:none;" />
+              <button id="attachBtn" title="Attach image or file to chat">&#128206;</button>
+              <button id="voiceBtn" title="Voice command">&#127908;</button>
+              <textarea id="chatInput" rows="1" placeholder="Type @ for plugins (@canva, @drive, @gmail, @github, @youtube) or / for commands (/pc, /phone, /build, /apk, /call)..."></textarea>
+              <button id="sendBtn" class="primary">Send</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ================= SETTINGS MODAL ================= -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>ULTRON Settings</h3>
+        <button id="closeSettingsBtn">&times;</button>
+      </div>
+
+      <div class="field-group">
+        <label>Google Gemini API Key (synced to your Google account for PC &amp; Phone)</label>
+        <input id="geminiApiKey" type="password" placeholder="AIza..." />
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <label>This Browser Device Name</label>
+          <input id="thisDeviceName" placeholder="Auto-detected PC or Phone model" />
+        </div>
+        <div class="field-group">
+          <label>This Device Type</label>
+          <select id="thisDeviceType">
+            <option value="PC">PC</option>
+            <option value="Phone">Phone</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <label>Local PC Bridge URL</label>
+          <input id="pcBridgeUrl" value="http://127.0.0.1:8765" />
+        </div>
+        <div class="field-group">
+          <label>Bridge Security Token</label>
+          <input id="bridgeToken" value="ultron-secret-token" />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Default PC Workspace Folder (used when you don't specify a folder path in chat)</label>
+        <input id="pcWorkDir" value="D:\ULTRON_Workspace" />
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <label>GitHub Username (for GitHub Plugin)</label>
+          <input id="githubUserInput" value="aymanchowdhury1" placeholder="aymanchowdhury1" />
+        </div>
+        <div class="field-group">
+          <label>GitHub Token (optional, for private repos)</label>
+          <input id="githubTokenInput" type="password" placeholder="ghp_..." />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:4px;">
+        <button id="downloadAgentConfigBtn">Download agent_config.json (for PC &amp; Phone)</button>
+        <button id="saveSettingsBtn" class="primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    // Embedded Firebase Configuration (jarvis-f1be9)
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBH4suTE2FNiPW4JjvxNW9dnb-96ryRWjM",
+      authDomain: "jarvis-f1be9.firebaseapp.com",
+      databaseURL: "https://jarvis-f1be9-default-rtdb.firebaseio.com",
+      projectId: "jarvis-f1be9",
+      storageBucket: "jarvis-f1be9.firebasestorage.app",
+      messagingSenderId: "300723765307",
+      appId: "1:300723765307:web:26cab0b83edc4e15635c1e",
+      measurementId: "G-QN0FVET8VY"
+    };
+
+
+    // Owner & Creator Identity
+    const OWNER_IDENTITY = {
+      name: "Ayman Chowdhury (TLTOM)",
+      instagram: "https://www.instagram.com/ayman.chowdhury.148/",
+      facebook: "https://www.facebook.com/profile.php?id=61587149130343",
+      github: "https://github.com/aymanchowdhury1/"
+    };
+
+    const OWNER_REPLY_TEXT = [
+      `My owner and creator is ${OWNER_IDENTITY.name}.`,
+      ``,
+      `Connect with ${OWNER_IDENTITY.name}:`,
+      `• Instagram: ${OWNER_IDENTITY.instagram}`,
+      `• Facebook: ${OWNER_IDENTITY.facebook}`,
+      `• GitHub: ${OWNER_IDENTITY.github}`
+    ].join("\n");
+
+    const OWNER_SYSTEM_RULE = `CREATOR & OWNER IDENTITY: You were created and are owned by ${OWNER_IDENTITY.name}. Whenever anyone asks who your owner is, who created you, who made you, or who built you (in any language), always state that your owner and creator is ${OWNER_IDENTITY.name} and include his social media links: Instagram (${OWNER_IDENTITY.instagram}), Facebook (${OWNER_IDENTITY.facebook}), and GitHub (${OWNER_IDENTITY.github}).`;
+
+    function isOwnerIdentityQuestion(text) {
+      const t = String(text || "").trim().toLowerCase();
+      return /\b(who\s+(is|are)\s+(your|ur)\s+(owner|creator|maker|boss|developer|master|founder)|who\s+(created|made|built|developed|owns|designed)\s+(you|u|ultron|jarvis)|your\s+(owner|creator|maker|developer)|owner\s+name|creator\s+name|tomar\s+malik|ke\s+baniyeche)\b/i.test(t);
+    }
+
+    function setMessageBodyWithLinks(el, text) {
+      const escaped = escapeHtml(text || "");
+      el.innerHTML = escaped.replace(/(https?:\/\/[^\s<>"')\]]+)/gi, (url) => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+      });
+    }
+
+    const PRESET_MODELS = [
+      { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", cat: "Fast & Autonomous Builder", tag: "Recommended", tagType: "free", desc: "Best speed + coding for games, web & Android Studio" },
+      { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite", cat: "Fast & Autonomous Builder", tag: "Instant", tagType: "free", desc: "Fastest ultra-low latency replies" },
+      { id: "gemini-4-hydrogen", name: "Gemini 4 Hydrogen", cat: "Fast & Autonomous Builder", tag: "Gemini 4", tagType: "free", desc: "Next-gen fast coding & multi-file projects" },
+      { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", cat: "Fast & Autonomous Builder", tag: "Fast", tagType: "free", desc: "Balanced speed & multimodal coding" },
+      { id: "gemini-3.1-flash-lite", name: "Gemini 3.1 Flash-Lite", cat: "Fast & Autonomous Builder", tag: "Lite", tagType: "free", desc: "Lightweight quick responses" },
+
+      { id: "gemini-4-carbon", name: "Gemini 4 Carbon", cat: "Frontier Engineering (Paid Tier)", tag: "Pro", tagType: "paid", desc: "Deepest multi-file architecture & reasoning" },
+      { id: "gemini-4-neon", name: "Gemini 4 Neon", cat: "Frontier Engineering (Paid Tier)", tag: "Pro", tagType: "paid", desc: "Complex interactive coding & Android apps" },
+      { id: "gemini-4-argon", name: "Gemini 4 Argon", cat: "Frontier Engineering (Paid Tier)", tag: "Pro", tagType: "paid", desc: "Efficient frontier reasoning model" },
+      { id: "gemini-3.1-pro-preview", name: "Gemini 3.1 Pro Preview", cat: "Frontier Engineering (Paid Tier)", tag: "Preview", tagType: "paid", desc: "Advanced multimodal reasoning" },
+
+      { id: "gemini-nano-banana-2.1", name: "Nano Banana 2.1", cat: "Image Generation & Editing", tag: "Image", tagType: "img", desc: "High-quality native image generation & editing" },
+      { id: "gemini-3.1-flash-image", name: "Nano Banana 2", cat: "Image Generation & Editing", tag: "Fast Img", tagType: "img", desc: "Production-scale visual creation" },
+      { id: "gemini-3.1-flash-lite-image", name: "Nano Banana 2 Lite", cat: "Image Generation & Editing", tag: "Lite Img", tagType: "img", desc: "Ultra-low latency image generation" },
+      { id: "gemini-3-pro-image", name: "Nano Banana Pro", cat: "Image Generation & Editing", tag: "4K Img", tagType: "img", desc: "Studio-quality 4K visual design" }
+    ];
+
+    function normalizeModel(m) {
+      const clean = String(m || "").replace(/^models\//i, "").trim();
+      if (!clean || /^gemini-(1\.0|1\.5|2\.0|2\.5)-/i.test(clean)) {
+        return "gemini-3.8-flash";
+      }
+      return clean;
+    }
+
+    function isImageModel(modelId) {
+      return /nano-banana|-image$/i.test(modelId || "");
+    }
+
+    const state = {
+      firebaseReady: false,
+      user: null,
+      idToken: "",
+      mode: "auto",
+      targetDeviceId: "auto",
+      permissionMode: "ask",
+      geminiApiKey: "",
+      geminiModel: "gemini-3.8-flash",
+      models: [...PRESET_MODELS],
+      sidebarCollapsedDesktop: false,
+      pcBridgeUrl: "http://127.0.0.1:8765",
+      bridgeToken: "ultron-secret-token",
+      pcWorkDir: "D:\\ULTRON_Workspace",
+      thisDeviceId: "",
+      thisDeviceName: "",
+      thisDeviceType: "PC",
+      devices: {},
+      chatHistory: [],
+      chats: {},
+      activeChatId: "",
+      activeSidebarTab: "chats",
+      plugins: {
+        canva: true,
+        drive: true,
+        gmail: true,
+        github: true,
+        youtube: true
+      },
+      githubUser: "aymanchowdhury1",
+      githubToken: "",
+      googleAccessToken: "",
+      gmailAccessToken: "",
+      canvaToken: "",
+      youtubeApiKey: "",
+      pluginConnections: {
+        canva: false,
+        drive: false,
+        gmail: false,
+        github: true,
+        youtube: true
+      }, 
+      pendingApprovals: {},
+      attachment: null,
+      localPcAlive: false
+    };
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (m) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[m]));
+    }
+
+    function extractRequestedPath(text) {
+      const raw = String(text || "");
+      let m = raw.match(/["']([a-zA-Z]:\\[^"']+)["']/);
+      if (m) return m[1].trim().replace(/[.,;!?]+$/, "");
+
+      m = raw.match(/([a-zA-Z]:\\[^\r\n"'<>|*?\n]+?)(?=\s+(?:with|and\s+(?:open|build|compile|run|make|include|add)|using|so\s+that|that\s+has)\b|$)/i);
+      if (m) return m[1].trim().replace(/[.,;!?]+$/, "");
+
+      m = raw.match(/([a-zA-Z]:\\[^\r\n"'<>|*?\n]+)/);
+      if (m) return m[1].trim().replace(/[.,;!?]+$/, "");
+
+      return "";
+    }
+
+    function detectThisDevice() {
+      const ua = navigator.userAgent || "";
+      const isAndroid = /Android/i.test(ua);
+      const isMobile = /Android|iPhone|iPad|Mobile/i.test(ua);
+      let type = isMobile ? "Phone" : "PC";
+      let name = "My-PC";
+
+      if (isAndroid) {
+        const match = ua.match(/Android\s[^;]+;\s*([^;)]+)/i);
+        const rawModel = match ? match[1].replace(/\s*Build\/.*/i, "").trim() : "Android-Phone";
+        if (/SM-A217/i.test(rawModel) || /A21s/i.test(rawModel)) {
+          name = "SAMSUNG GALAXY A21S";
+        } else {
+          name = rawModel.toUpperCase();
+        }
+      } else if (/iPhone/i.test(ua)) {
+        name = "IPHONE";
+      } else if (state.user?.displayName) {
+        name = `${state.user.displayName.split(" ")[0]}-PC`;
+      }
+
+      if (!state.thisDeviceId) {
+        state.thisDeviceId = type.toLowerCase() + "_" + Math.random().toString(36).slice(2, 10);
+      }
+      if (!state.thisDeviceName) state.thisDeviceName = name;
+      state.thisDeviceType = state.thisDeviceType || type;
+    }
+
+    function loadLocalPrefs() {
+      try {
+        const prev = JSON.parse(
+          localStorage.getItem("ultron_v8_prefs") || localStorage.getItem("ultron_v7_prefs")
+          || localStorage.getItem("ultron_v6_prefs")
+          || localStorage.getItem("ultron_v5_prefs")
+          || localStorage.getItem("ultron_v4_prefs")
+          || "{}"
+        );
+        const saved = JSON.parse(localStorage.getItem("ultron_v14_prefs") || localStorage.getItem("ultron_v12_prefs") || "{}");
+        Object.assign(state, {
+          ...state,
+          geminiApiKey: prev.geminiApiKey || "",
+          pcWorkDir: prev.pcWorkDir || state.pcWorkDir,
+          ...saved,
+          user: null,
+          idToken: "",
+          firebaseReady: false,
+          devices: {},
+          pendingApprovals: {},
+          attachment: null
+        });
+        state.geminiModel = normalizeModel(state.geminiModel);
+        if (!Array.isArray(state.models) || state.models.length === 0) {
+          state.models = [...PRESET_MODELS];
+        }
+      } catch (_) {}
+      detectThisDevice();
+    }
+
+    function saveLocalPrefs() {
+      const subset = {
+        mode: state.mode,
+        targetDeviceId: state.targetDeviceId,
+        permissionMode: state.permissionMode,
+        geminiApiKey: state.geminiApiKey,
+        geminiModel: normalizeModel(state.geminiModel),
+        models: state.models,
+        sidebarCollapsedDesktop: state.sidebarCollapsedDesktop,
+        pcBridgeUrl: state.pcBridgeUrl,
+        bridgeToken: state.bridgeToken,
+        pcWorkDir: state.pcWorkDir,
+        thisDeviceId: state.thisDeviceId,
+        thisDeviceName: state.thisDeviceName,
+        thisDeviceType: state.thisDeviceType
+      };
+      localStorage.setItem("ultron_v14_prefs", JSON.stringify({ ...subset, chats: state.chats, activeChatId: state.activeChatId, plugins: state.plugins, pluginConnections: state.pluginConnections, githubUser: state.githubUser, githubToken: state.githubToken, canvaToken: state.canvaToken, youtubeApiKey: state.youtubeApiKey }));
+    }
+
+    // ================= MODEL SLIDEBAR =================
+    function isMobileViewport() { return window.innerWidth <= 860; }
+
+    function applySidebarState() {
+      const sb = $("modelSidebar");
+      const bd = $("sidebarBackdrop");
+      if (isMobileViewport()) {
+        sb.classList.remove("collapsed");
+      } else {
+        sb.classList.remove("mobile-open");
+        bd.classList.remove("open");
+        sb.classList.toggle("collapsed", !!state.sidebarCollapsedDesktop);
+      }
+    }
+
+    function toggleSidebar(forceOpen = null) {
+      const sb = $("modelSidebar");
+      const bd = $("sidebarBackdrop");
+      if (isMobileViewport()) {
+        const shouldOpen = forceOpen !== null ? forceOpen : !sb.classList.contains("mobile-open");
+        sb.classList.toggle("mobile-open", shouldOpen);
+        bd.classList.toggle("open", shouldOpen);
+      } else {
+        state.sidebarCollapsedDesktop = forceOpen !== null ? !forceOpen : !state.sidebarCollapsedDesktop;
+        saveLocalPrefs();
+        applySidebarState();
+      }
+    }
+
+    function selectModel(modelId, closeOnMobile = true) {
+      const clean = normalizeModel(modelId);
+      state.geminiModel = clean;
+      if (!state.models.some((m) => m.id === clean)) {
+        state.models.unshift({
+          id: clean,
+          name: clean,
+          cat: "Custom / API Models",
+          tag: isImageModel(clean) ? "Image" : "Custom",
+          tagType: isImageModel(clean) ? "img" : "free",
+          desc: "Selected API model"
+        });
+      }
+      saveLocalPrefs();
+      saveCloudSettings();
+      renderModelSidebar();
+      if (closeOnMobile && isMobileViewport()) toggleSidebar(false);
+    }
+
+    function renderModelSidebar() {
+      const current = normalizeModel(state.geminiModel);
+      const chip = $("activeModelChip");
+      const matchObj = state.models.find((m) => m.id === current);
+      chip.textContent = matchObj ? matchObj.name : current;
+
+      const filterText = ($("modelSearchInput")?.value || "").trim().toLowerCase();
+      const container = $("modelList");
+      container.innerHTML = "";
+
+      const filtered = state.models.filter((m) => {
+        if (!filterText) return true;
+        return (m.id + " " + (m.name || "") + " " + (m.desc || "") + " " + (m.cat || "")).toLowerCase().includes(filterText);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="sidebar-status" style="padding:8px;">No matching models. Enter a custom ID below to use it directly.</div>`;
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach((m) => {
+        const cat = m.cat || "Available API Models";
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(m);
+      });
+
+      Object.keys(grouped).forEach((cat) => {
+        const title = document.createElement("div");
+        title.className = "model-cat-title";
+        title.textContent = cat;
+        container.appendChild(title);
+
+        grouped[cat].forEach((m) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `model-item ${m.id === current ? "active" : ""}`;
+          const tagCls = m.tagType === "paid" ? "paid" : m.tagType === "img" ? "img" : "";
+          btn.innerHTML = `
+            <div class="model-item-top">
+              <span class="model-item-name">${escapeHtml(m.name || m.id)}</span>
+              ${m.tag ? `<span class="model-tag ${tagCls}">${escapeHtml(m.tag)}</span>` : ""}
+            </div>
+            <span class="model-item-id">${escapeHtml(m.id)}</span>
+            ${m.desc ? `<span class="model-item-desc">${escapeHtml(m.desc)}</span>` : ""}
+          `;
+          btn.addEventListener("click", () => selectModel(m.id, true));
+          container.appendChild(btn);
+        });
+      });
+    }
+
+    async function fetchAvailableModelsFromApi(silent = false) {
+      const key = (state.geminiApiKey || "").trim();
+      const statusEl = $("sidebarStatus");
+      if (!key) {
+        if (!silent) statusEl.textContent = "Add your Gemini API Key in Settings first to sync live models.";
+        return false;
+      }
+
+      statusEl.textContent = "Syncing live models from your Gemini API key...";
+      const btn = $("refreshModelsBtn");
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=100&key=${encodeURIComponent(key)}`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+
+        const presetMap = {};
+        PRESET_MODELS.forEach((p) => { presetMap[p.id] = p; });
+
+        const rawModels = Array.isArray(data.models) ? data.models : [];
+        const liveList = [];
+        const seen = new Set();
+
+        rawModels.forEach((m) => {
+          const methods = m.supportedGenerationMethods || [];
+          if (!methods.includes("generateContent")) return;
+          const id = String(m.name || "").replace(/^models\//i, "");
+          if (/embedding|veo|tts|transcribe|live-translate|aqa|bison|gecko|robotics|decision/i.test(id)) return;
+          if (/^gemini-(1\.0|1\.5|2\.0|2\.5)-/i.test(id)) return;
+          if (!/gemini|gemma/i.test(id)) return;
+          if (seen.has(id)) return;
+          seen.add(id);
+
+          if (presetMap[id]) {
+            liveList.push(presetMap[id]);
+          } else {
+            const img = isImageModel(id);
+            liveList.push({
+              id,
+              name: m.displayName || id,
+              cat: img ? "Image Generation & Editing" : "Live API Models",
+              tag: img ? "Image" : "Live",
+              tagType: img ? "img" : "free",
+              desc: (m.description || "").slice(0, 75)
+            });
+          }
+        });
+
+        if (liveList.length > 0) {
+          const order = PRESET_MODELS.map((p) => p.id);
+          liveList.sort((a, b) => {
+            const ia = order.indexOf(a.id);
+            const ib = order.indexOf(b.id);
+            if (ia !== -1 && ib !== -1) return ia - ib;
+            if (ia !== -1) return -1;
+            if (ib !== -1) return 1;
+            return b.id.localeCompare(a.id);
+          });
+          state.models = liveList;
+          if (!liveList.some((m) => m.id === state.geminiModel)) {
+            state.geminiModel = liveList[0].id;
+          }
+          saveLocalPrefs();
+          renderModelSidebar();
+          statusEl.textContent = `Synced ${liveList.length} live models from your API key.`;
+        } else {
+          statusEl.textContent = "Showing latest Gemini 3 & 4 preset models.";
+        }
+        return true;
+      } catch (err) {
+        statusEl.textContent = `Sync error: ${err.message}`;
+        return false;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function setGateStatus(msg, isErr = false) {
+      const el = $("gateStatus");
+      el.textContent = msg;
+      el.className = isErr ? "gate-status err" : "gate-status";
+    }
+
+    function getRtdbSafe() {
+      if (!state.firebaseReady) return null;
+      try { return firebase.database(); } catch (_) { return null; }
+    }
+
+    function initFirebase() {
+      if (window.location.hostname === "127.0.0.1") {
+        const btn = $("switchLocalhostBtn");
+        btn.style.display = "inline-flex";
+        btn.onclick = () => {
+          window.location.href = window.location.href.replace("://127.0.0.1", "://localhost");
+        };
+        setGateStatus(
+          "You opened ULTRON on 127.0.0.1, which Firebase often blocks.\nClick 'Switch to http://localhost' below to sign in right away!",
+          true
+        );
+      } else if (window.location.protocol === "file:") {
+        setGateStatus(
+          "Google Sign-In cannot run on file:// URLs.\nRun start_pc.bat and open http://localhost:8080/index.html (or host on GitHub Pages).",
+          true
+        );
+      }
+
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        try {
+          if (window.location.protocol.startsWith("http") && firebase.analytics) firebase.analytics();
+        } catch (_) {}
+        state.firebaseReady = true;
+        if (window.location.protocol !== "file:" && window.location.hostname !== "127.0.0.1") {
+          setGateStatus("Ready. Click 'Sign in with Google' to unlock ULTRON.");
+        }
+        return true;
+      } catch (err) {
+        setGateStatus("Firebase init error: " + err.message, true);
+        return false;
+      }
+    }
+
+    async function handleGoogleLogin() {
+      if (window.location.protocol === "file:") {
+        setGateStatus("Run start_pc.bat and open http://localhost:8080/index.html (or host on GitHub Pages) to use Google Sign-In.", true);
+        return;
+      }
+      if (!state.firebaseReady) return;
+      const provider = new firebase.auth.GoogleAuthProvider();
+      setGateStatus("Opening Google Sign-In...");
+      try {
+        const cred = await firebase.auth().signInWithPopup(provider);
+        if (cred?.credential?.accessToken) { state.googleAccessToken = cred.credential.accessToken; }
+      } catch (err) {
+        if (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment") {
+          setGateStatus("Redirecting to Google Sign-In...");
+          await firebase.auth().signInWithRedirect(provider);
+        } else if (err.code === "auth/unauthorized-domain") {
+          const host = window.location.hostname || "(local file)";
+          setGateStatus(
+            `Domain "${host}" is not authorized in Firebase yet.\nFix: Firebase Console -> Authentication -> Settings -> Authorized domains -> Add "${host}" (or use http://localhost:8080/index.html).`,
+            true
+          );
+        } else {
+          setGateStatus("Google Sign-In error: " + err.message, true);
+        }
+      }
+    }
+
+    function isDeviceActive(dev) {
+      if (!dev) return false;
+      if (dev.id === state.thisDeviceId) return true;
+      if (dev.id === "local_pc_bridge") return state.localPcAlive;
+      return Date.now() - (dev.lastSeen || 0) < 22000;
+    }
+
+    function renderDevicesUI() {
+      const strip = $("devicesStrip");
+      const select = $("targetDeviceSelect");
+      const prevTarget = state.targetDeviceId;
+
+      const list = Object.values(state.devices);
+      strip.innerHTML = "";
+      select.innerHTML = `<option value="auto">Auto-Pick Active</option>`;
+
+      if (list.length === 0) {
+        strip.innerHTML = `<span style="font-size:12px;color:var(--muted);">No devices paired yet</span>`;
+      }
+
+      list.sort((a, b) => (isDeviceActive(b) ? 1 : 0) - (isDeviceActive(a) ? 1 : 0));
+
+      list.forEach((dev) => {
+        const active = isDeviceActive(dev);
+        const isNativeAgent = dev.source && dev.source !== "browser";
+        const icon = dev.type === "Phone" ? "📱" : (dev.type === "Browser" || !isNativeAgent) ? "🌐" : "💻";
+
+        const pill = document.createElement("div");
+        pill.className = `dev-pill ${active ? "online" : ""} ${state.targetDeviceId === dev.id ? "selected" : ""}`;
+        pill.title = `${dev.name} (${dev.type}) — ${active ? "Active now" : "Offline"}`;
+        pill.innerHTML = `
+          <span class="status-dot ${active ? "active" : ""}"></span>
+          <span>${icon} ${escapeHtml(dev.name)}</span>
+          <span class="dev-state-tag">${active ? "Active" : "Offline"}</span>
+        `;
+        pill.addEventListener("click", () => {
+          state.targetDeviceId = dev.id;
+          saveLocalPrefs();
+          renderDevicesUI();
+        });
+        strip.appendChild(pill);
+
+        const opt = document.createElement("option");
+        opt.value = dev.id;
+        opt.textContent = `${icon} ${dev.name} (${active ? "Active" : "Offline"})`;
+        select.appendChild(opt);
+      });
+
+      select.value = [...select.options].some((o) => o.value === prevTarget) ? prevTarget : "auto";
+      state.targetDeviceId = select.value;
+    }
+
+    function renderPermissionBtn() {
+      const btn = $("permToggleBtn");
+      if (state.permissionMode === "allow_all") {
+        btn.textContent = "Allow Everything";
+        btn.className = "ok-active";
+      } else {
+        btn.textContent = "Ask Each Time";
+        btn.className = "warn-active";
+      }
+    }
+
+    function renderModeSwitch() {
+      document.querySelectorAll("#modeSwitch button").forEach((b) => {
+        b.classList.toggle("active", b.dataset.mode === state.mode);
+      });
+    }
+
+    // ================= FIREBASE PRESENCE & SYNC =================
+    let heartbeatTimer = null;
+    let authSyncTimer = null;
+    let listenersAttached = false;
+
+    async function startSignedInSession(user) {
+      state.user = user;
+      state.idToken = await user.getIdToken();
+
+      if (!state.thisDeviceName || state.thisDeviceName === "My-PC") {
+        detectThisDevice();
+        if (state.thisDeviceType === "PC" && user.displayName) {
+          state.thisDeviceName = `${user.displayName.split(" ")[0]}-PC`;
+        }
+      }
+
+      $("authGate").style.display = "none";
+      $("appShell").style.display = "flex";
+      $("userNameChip").textContent = user.displayName || user.email || "Owner";
+      if (user.photoURL) {
+        $("userAvatar").src = user.photoURL;
+        $("userAvatar").style.display = "block";
+      }
+
+      applySidebarState();
+      renderModelSidebar();
+      loadCloudSettings();
+      renderChatList();
+      renderPluginsSidebar();
+      renderActiveChatMessages();
+      loadChatsFromFirebase();
+      attachFirebaseListeners();
+      sendHeartbeat();
+      syncAuthToLocalPcBridge();
+
+      if (state.geminiApiKey) fetchAvailableModelsFromApi(true);
+
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      heartbeatTimer = setInterval(() => {
+        sendHeartbeat();
+        pingLocalPcBridge();
+        renderDevicesUI();
+      }, 6000);
+
+      if (authSyncTimer) clearInterval(authSyncTimer);
+      authSyncTimer = setInterval(() => syncAuthToLocalPcBridge(true), 45 * 60 * 1000);
+
+      pingLocalPcBridge();
+      renderDevicesUI();
+
+      if (false && $("chatMessages").children.length === 0) {
+        addChatMessage("bot", `Welcome back, ${user.displayName || "Owner"}. ULTRON Autonomous Builder v8 is online.\n\nTry telling ULTRON:\n• "Make a 2D neon space shooter game in C:\\Users\\...\\New folder"\n• "Build a full scientific calculator app in Android Studio in D:\\MyApps\\CalcPro"\n• "Create a responsive portfolio website with dark mode and save it in D:\\Sites\\Portfolio"\n• Or control your PC & Phone directly!`, {
+          route: `JARVIS Builder • ${state.geminiModel}`
+        });
+      }
+    }
+
+    function loadCloudSettings() {
+      const db = getRtdbSafe();
+      if (!db || !state.user) return;
+      db.ref(`ultron/${state.user.uid}/settings`).once("value").then((snap) => {
+        const val = snap.val();
+        if (!val) return;
+        const hadKey = !!state.geminiApiKey;
+        if (val.geminiApiKey && !state.geminiApiKey) state.geminiApiKey = val.geminiApiKey;
+        const upgraded = normalizeModel(val.geminiModel);
+        state.geminiModel = upgraded;
+        if (val.pcWorkDir) state.pcWorkDir = val.pcWorkDir;
+        if (val.bridgeToken) state.bridgeToken = val.bridgeToken;
+        saveLocalPrefs();
+        renderModelSidebar();
+        if (val.geminiModel !== upgraded) saveCloudSettings();
+        populateSettingsFields();
+        if (!hadKey && state.geminiApiKey) fetchAvailableModelsFromApi(true);
+      }).catch(() => {});
+    }
+
+    function saveCloudSettings() {
+      const db = getRtdbSafe();
+      if (!db || !state.user) return;
+      db.ref(`ultron/${state.user.uid}/settings`).set({
+        geminiApiKey: state.geminiApiKey,
+        geminiModel: normalizeModel(state.geminiModel),
+        pcWorkDir: state.pcWorkDir,
+        bridgeToken: state.bridgeToken,
+        updatedAt: Date.now()
+      }).catch(() => {});
+    }
+
+    function sendHeartbeat() {
+      const selfDev = {
+        id: state.thisDeviceId,
+        name: `${state.thisDeviceName} (Web)`,
+        type: "Browser",
+        source: "browser",
+        lastSeen: Date.now()
+      };
+      state.devices[selfDev.id] = selfDev;
+
+      const db = getRtdbSafe();
+      if (db && state.user) {
+        const ref = db.ref(`ultron/${state.user.uid}/devices/${selfDev.id}`);
+        ref.set(selfDev).catch(() => {});
+        ref.onDisconnect().update({ lastSeen: 0 }).catch(() => {});
+      }
+    }
+
+    async function pingLocalPcBridge() {
+      if (!state.pcBridgeUrl) return;
+      try {
+        const res = await fetch(`${state.pcBridgeUrl.replace(/\/$/, "")}/status`, {
+          headers: { "X-Ultron-Token": state.bridgeToken || "" }
+        });
+        if (!res.ok) throw new Error("not ok");
+        const data = await res.json();
+        state.localPcAlive = true;
+        const devId = data.deviceId || "local_pc_bridge";
+        state.devices[devId] = {
+          id: devId,
+          name: data.deviceName || data.hostname || "Local-PC",
+          type: "PC",
+          source: "pc_agent",
+          bridgeUrl: state.pcBridgeUrl,
+          androidStudio: !!data.androidStudioPath,
+          androidSdk: !!data.androidSdkPath,
+          lastSeen: Date.now()
+        };
+      } catch (_) {
+        state.localPcAlive = false;
+      }
+      renderDevicesUI();
+    }
+
+    async function syncAuthToLocalPcBridge(forceRefresh = false) {
+      if (!state.pcBridgeUrl || !state.user) return;
+      try {
+        const freshToken = await state.user.getIdToken(forceRefresh);
+        state.idToken = freshToken;
+        await fetch(`${state.pcBridgeUrl.replace(/\/$/, "")}/sync-auth`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Ultron-Token": state.bridgeToken || ""
+          },
+          body: JSON.stringify({
+            uid: state.user.uid,
+            email: state.user.email,
+            displayName: state.user.displayName,
+            apiKey: FIREBASE_CONFIG.apiKey,
+            databaseURL: FIREBASE_CONFIG.databaseURL,
+            idToken: freshToken,
+            refreshToken: state.user.refreshToken || "",
+            workDir: state.pcWorkDir
+          })
+        });
+      } catch (_) {}
+    }
+
+    function attachFirebaseListeners() {
+      const db = getRtdbSafe();
+      if (listenersAttached || !db || !state.user) return;
+      listenersAttached = true;
+
+      db.ref(`ultron/${state.user.uid}/devices`).on("value", (snap) => {
+        const val = snap.val() || {};
+        Object.keys(val).forEach((k) => { state.devices[k] = val[k]; });
+        renderDevicesUI();
+      }, () => {});
+
+      const sessionStart = Date.now();
+      db.ref(`ultron/${state.user.uid}/results`).limitToLast(5).on("child_added", (snap) => {
+        const item = snap.val();
+        if (!item || (item.timestamp || 0) < sessionStart) return;
+        addChatMessage("bot", item.output || item.message || "Device task finished.", {
+          route: `Device Result: ${item.deviceName || item.deviceId}`
+        });
+      }, () => {});
+    }
+
+    // ================= BULLETPROOF MULTI-FILE PROJECT PARSER =================
+    function parseAutonomousBuilderOutput(rawText, fallbackTargetDir, isAndroidReq) {
+      const raw = String(rawText || "");
+      let meta = {};
+      const metaMatch = raw.match(/<<<ULTRON_META>>>([\s\S]*?)<<<END_META>>>/i);
+      if (metaMatch) {
+        try { meta = JSON.parse(metaMatch[1].trim()); } catch (_) {}
+      }
+
+      const files = [];
+      const fileRegex = /<<<FILE:\s*([^>\r\n]+?)>>>\r?\n?([\s\S]*?)<<<END_FILE>>>/gi;
+      let m;
+      while ((m = fileRegex.exec(raw)) !== null) {
+        const relPath = m[1].trim().replace(/^[/\\]+/, "");
+        const content = m[2].replace(/^\r?\n/, "").replace(/\r?\n$/, "");
+        if (relPath) files.push({ path: relPath, content });
+      }
+
+      if (files.length === 0) {
+        const htmlMatch = raw.match(/```html\s*([\s\S]*?)```/i);
+        if (htmlMatch) {
+          files.push({ path: "index.html", content: htmlMatch[1].trim() });
+          if (!meta.open_file) meta.open_file = "index.html";
+        }
+      }
+
+      const targetDir = (fallbackTargetDir || meta.target_dir || "").trim();
+      const projectName = (meta.project_name || "UltronProject").replace(/[^a-zA-Z0-9_-]+/g, "_");
+      const packageName = (meta.package_name || `com.ultron.${projectName.toLowerCase().replace(/[^a-z0-9]/g, "") || "app"}`);
+
+      return {
+        meta,
+        files,
+        targetDir,
+        projectName,
+        packageName,
+        isAndroid: Boolean(isAndroidReq || meta.project_type === "android_studio" || meta.open_in_android_studio || meta.build_apk),
+        openFile: meta.open_file || (files.some((f) => f.path.toLowerCase() === "index.html") ? "index.html" : ""),
+        openInAndroidStudio: meta.open_in_android_studio !== false && Boolean(isAndroidReq || meta.project_type === "android_studio"),
+        buildApk: Boolean(meta.build_apk),
+        postCommands: Array.isArray(meta.post_commands) ? meta.post_commands : [],
+        summary: meta.summary || `Generated complete ${isAndroidReq ? "Android Studio" : "multi-file"} project (${files.length} files).`
+      };
+    }
+
+    // ================= CHAT RENDERING =================
+    function attachGeneratedImages(div, images) {
+      if (!Array.isArray(images) || images.length === 0) return;
+      images.forEach((imgObj, idx) => {
+        const dataUrl = `data:${imgObj.mimeType};base64,${imgObj.data}`;
+        const prev = document.createElement("div");
+        prev.className = "inline-preview";
+        prev.innerHTML = `
+          <div class="inline-preview-bar">
+            <span>Generated Image ${idx + 1}</span>
+            <button class="dl-gen-img" style="padding:3px 8px;font-size:11px;">Download Image</button>
+          </div>
+          <img class="inline-gen-img" src="${dataUrl}" alt="Generated output" />
+        `;
+        prev.querySelector(".dl-gen-img").addEventListener("click", () => {
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = `ultron-image-${Date.now()}.png`;
+          a.click();
+        });
+        div.appendChild(prev);
+      });
+    }
+
+    function attachHtmlPreview(div, htmlCode, targetDir = "") {
+      const prev = document.createElement("div");
+      prev.className = "inline-preview";
+      prev.innerHTML = `
+        <div class="inline-preview-bar">
+          <span>Live Interactive Preview</span>
+          <div style="display:flex;gap:6px;">
+            <button class="dl-html-btn" style="padding:3px 8px;font-size:11px;">Download HTML</button>
+            <button class="save-pc-btn" style="padding:3px 8px;font-size:11px;">Save to PC</button>
+          </div>
+        </div>
+        <iframe sandbox="allow-scripts allow-forms allow-modals"></iframe>
+      `;
+      prev.querySelector("iframe").srcdoc = htmlCode;
+      prev.querySelector(".dl-html-btn").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([htmlCode], { type: "text/html" }));
+        a.download = "index.html";
+        a.click();
+      });
+      prev.querySelector(".save-pc-btn").addEventListener("click", () => {
+        dispatchDeviceCommandWithGuardrail({
+          action: "write_project",
+          deviceTarget: "PC",
+          params: {
+            targetDir: targetDir || "",
+            projectName: "web_app_" + Date.now(),
+            files: [{ path: "index.html", content: htmlCode }],
+            openFile: "index.html"
+          },
+          explanation: "Save web app/game to PC and launch in browser"
+        });
+      });
+      div.appendChild(prev);
+    }
+
+    function attachRichOutputsToMessage(div, text) {
+      const htmlMatch = text.match(/```html\s*([\s\S]*?)```/i);
+      if (htmlMatch) attachHtmlPreview(div, htmlMatch[1].trim());
+
+      const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+      if (svgMatch) {
+        const svgCode = svgMatch[0];
+        const prev = document.createElement("div");
+        prev.className = "inline-preview";
+        prev.innerHTML = `
+          <div class="inline-preview-bar">
+            <span>Generated Graphic</span>
+            <button class="dl-svg-btn" style="padding:3px 8px;font-size:11px;">Download SVG</button>
+          </div>
+          <div class="inline-svg-wrap">${svgCode}</div>
+        `;
+        prev.querySelector(".dl-svg-btn").addEventListener("click", () => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([svgCode], { type: "image/svg+xml" }));
+          a.download = "ultron-graphic.svg";
+          a.click();
+        });
+        div.appendChild(prev);
+      }
+    }
+
+    function appendMessageTools(div, getTextFn) {
+      const tools = document.createElement("div");
+      tools.className = "msg-tools";
+      const speakBtn = document.createElement("button");
+      speakBtn.textContent = "🔊 Speak";
+      speakBtn.addEventListener("click", () => {
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(new SpeechSynthesisUtterance(getTextFn().replace(/```[\s\S]*?```/g, "code block").slice(0, 600)));
+        }
+      });
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "Copy";
+      copyBtn.addEventListener("click", () => navigator.clipboard?.writeText(getTextFn()));
+      tools.appendChild(speakBtn);
+      tools.appendChild(copyBtn);
+      div.appendChild(tools);
+    }
+
+    function addChatMessage(role, text, opts = {}) {
+      const container = $("chatMessages");
+      const div = document.createElement("div");
+      div.className = `msg ${role}`;
+
+      const who = role === "user" ? (state.user?.displayName || "You") : "ULTRON";
+      const routeHtml = opts.route ? `<span class="route-badge">${escapeHtml(opts.route)}</span>` : "";
+
+      div.innerHTML = `
+        <div class="msg-meta">
+          <span>${escapeHtml(who)}</span>
+          ${routeHtml}
+        </div>
+        <div class="msg-body"></div>
+      `;
+
+      const bodyEl = div.querySelector(".msg-body");
+      setMessageBodyWithLinks(bodyEl, text);
+
+      if (opts.manifestText) {
+        const mf = document.createElement("div");
+        mf.className = "file-manifest";
+        mf.textContent = opts.manifestText;
+        div.appendChild(mf);
+      }
+
+      if (opts.previewHtml) {
+        attachHtmlPreview(div, opts.previewHtml, opts.previewTargetDir || "");
+      }
+
+      if (role === "bot" && !opts.streaming && !opts.skipAutoRich) {
+        if (opts.images) attachGeneratedImages(div, opts.images);
+        attachRichOutputsToMessage(div, text);
+      }
+
+      if (opts.approvalId && opts.plan) {
+        const appr = document.createElement("div");
+        appr.className = "approval-box";
+        appr.id = `appr-${opts.approvalId}`;
+        const summaryObj = {
+          target: opts.targetLabel,
+          action: opts.plan.action,
+          targetDir: opts.plan.params?.targetDir || state.pcWorkDir,
+          files: Array.isArray(opts.plan.params?.files)
+            ? opts.plan.params.files.map((f) => `${f.path} (${f.content.length} chars)`)
+            : undefined,
+          openInAndroidStudio: opts.plan.params?.openInAndroidStudio || undefined,
+          buildApk: opts.plan.params?.buildApk || undefined,
+          params: !Array.isArray(opts.plan.params?.files) ? opts.plan.params : undefined
+        };
+        appr.innerHTML = `
+          <div style="font-size:12px;font-weight:700;color:#fde68a;">Approval Required (Ask Each Time)</div>
+          <code>${escapeHtml(JSON.stringify(summaryObj, null, 2))}</code>
+          <div style="display:flex;gap:8px;">
+            <button class="primary" onclick="window.__approve('${opts.approvalId}')">Approve &amp; Execute</button>
+            <button onclick="window.__cancel('${opts.approvalId}')">Cancel</button>
+          </div>
+        `;
+        div.appendChild(appr);
+      }
+
+      if (role === "bot" && !opts.approvalId && !opts.streaming) {
+        appendMessageTools(div, () => bodyEl.textContent);
+      }
+
+      if (!opts.skipRecord && !opts.streaming && !opts.approvalId && text && text !== '...') {
+        recordMessageToActiveChat(role, text, opts.route || '');
+      }
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+      return div;
+    }
+
+    // ================= CLOUD GEMINI API ENGINE =================
+    function buildGeminiPayload(systemInstruction, userPrompt, imageAttachment = null, forImageModel = false, maxTokens = 8192) {
+      const userParts = [{ text: userPrompt }];
+      if (imageAttachment?.base64 && imageAttachment?.mimeType?.startsWith("image/")) {
+        userParts.push({ inline_data: { mime_type: imageAttachment.mimeType, data: imageAttachment.base64 } });
+      }
+      if (forImageModel) {
+        return {
+          contents: [{ role: "user", parts: userParts }],
+          generationConfig: { responseModalities: ["TEXT", "IMAGE"] }
+        };
+      }
+      const contents = [
+        ...state.chatHistory.slice(-6).map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }]
+        })),
+        { role: "user", parts: userParts }
+      ];
+      return {
+        system_instruction: { parts: [{ text: systemInstruction }] },
+        contents,
+        generationConfig: { maxOutputTokens: maxTokens }
+      };
+    }
+
+    async function callGeminiInstant(systemInstruction, userPrompt, imageAttachment = null, maxTokens = 16384) {
+      if (!state.geminiApiKey) return null;
+      const model = normalizeModel(state.geminiModel);
+      const imgMode = isImageModel(model);
+      const body = JSON.stringify(buildGeminiPayload(systemInstruction, userPrompt, imageAttachment, imgMode, maxTokens));
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(state.geminiApiKey)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error?.message || `Gemini HTTP ${res.status} (${model})`);
+      }
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const text = parts.filter((p) => p.text).map((p) => p.text).join("\n");
+      const images = parts
+        .filter((p) => p.inlineData?.data || p.inline_data?.data)
+        .map((p) => {
+          const d = p.inlineData || p.inline_data;
+          return { mimeType: d.mimeType || d.mime_type || "image/png", data: d.data };
+        });
+      return { model, text, images };
+    }
+
+    async function streamGeminiToMessage(systemInstruction, userPrompt, imageAttachment, onChunk) {
+      if (!state.geminiApiKey) return null;
+      const model = normalizeModel(state.geminiModel);
+      const body = JSON.stringify(buildGeminiPayload(systemInstruction, userPrompt, imageAttachment, false, 16384));
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(state.geminiApiKey)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || `Gemini HTTP ${res.status} (${model})`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const jsonStr = line.slice(5).trim();
+          if (!jsonStr || jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const piece = parsed?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "";
+            if (piece) {
+              fullText += piece;
+              onChunk(fullText, model);
+            }
+          } catch (_) {}
+        }
+      }
+      return { model, text: fullText };
+    }
+
+    // ================= AUTONOMOUS FULL PROJECT BUILDER =================
+    function isProjectBuildIntent(text) {
+      return /\b(make|build|create|generate|develop|code|write)\b[\s\S]*\b(game|2d|3d|app|android studio|apk|website|web app|site|dashboard|project|portfolio|tool|calculator|bot|python|program|system|software|clone|shop|store|landing page|chat app|todo)\b/i.test(text)
+        || /\b(android studio|build apk|make apk)\b/i.test(text);
+    }
+
+    function isAndroidStudioIntent(text) {
+      return /\b(android studio|apk|kotlin app|android app|mobile app in android)\b/i.test(text);
+    }
+
+    async function runAutonomousProjectBuilder(userPrompt, targetDev, attachment) {
+      const requestedPath = extractRequestedPath(userPrompt);
+      const isAndroid = isAndroidStudioIntent(userPrompt);
+      const wantsApk = /\b(apk|compile|assemble)\b/i.test(userPrompt);
+
+      if (!state.geminiApiKey) {
+        addChatMessage("bot", "Add your Google Gemini API Key in ⚙ Settings so ULTRON can architect and write full multi-file projects & Android Studio apps.", { route: "Setup Needed" });
+        return;
+      }
+
+      const statusMsg = addChatMessage(
+        "bot",
+        isAndroid
+          ? `Architecting full Android Studio project (${state.geminiModel})...`
+          : `Architecting complete runnable project (${state.geminiModel})...`,
+        { route: `JARVIS Builder -> ${targetDev.name}` }
+      );
+
+      const androidRules = `
+ANDROID STUDIO PROJECT REQUIREMENTS:
+- Generate a COMPLETE, production-ready, error-free Android Studio project using Kotlin + XML (or WebView + full interactive HTML/CSS/JS inside app/src/main/assets/index.html if the user asked for a 2D/HTML5 game or web-style app inside Android Studio).
+- Include ALL necessary files:
+  * app/src/main/java/<pkg_path>/MainActivity.kt (plus any extra Kotlin classes, ViewModels, Adapters, or GameView.kt needed)
+  * app/src/main/res/layout/activity_main.xml (and extra layouts if native UI)
+  * app/src/main/res/values/strings.xml
+  * app/src/main/res/values/colors.xml
+  * app/src/main/res/values/themes.xml
+  * app/src/main/AndroidManifest.xml
+  * app/build.gradle.kts (using compileSdk = 35, minSdk = 24, targetSdk = 35, AppCompat/Material dependencies, ViewBinding if used)
+- IMPORTANT: Write 100% real, complete, functional code for every feature the owner requested. NO placeholders, NO "// TODO implement later".
+- Set "project_type": "android_studio", "open_in_android_studio": true, and "build_apk": ${wantsApk ? "true" : "false"}.`;
+
+      const generalProjectRules = `
+FULL PROJECT REQUIREMENTS:
+- Generate a COMPLETE, rich, polished, 100% runnable project implementing EVERY detail the owner asked for.
+- If the user asks for a 2D game or website/web app:
+  * Build a genuinely fun, visually polished HTML5 Canvas / CSS / JS project (you can put everything cleanly in index.html so it opens immediately via file:// with ZERO CORS issues, OR split into index.html + style.css + game.js using relative paths without ES module CORS errors!).
+  * Include title screen, controls (keyboard + touch buttons for phone/PC), score/lives/levels, smooth animation, sound effects via Web Audio API, and game over / restart.
+  * Set "open_file": "index.html".
+- If the user asks for a Python / desktop / Node.js / multi-file project:
+  * Write all complete source files + README.md with zero placeholders or TODOs.
+  * Set "open_file" to the main folder or README.md.`;
+
+      const builderSys = `You are PROJECT ULTRON (JARVIS Autonomous Software Architect).
+The owner wants you to build a COMPLETE project directly on their PC${requestedPath ? ` inside EXACT directory: ${requestedPath}` : ` inside ${state.pcWorkDir}`}.
+
+${isAndroid ? androidRules : generalProjectRules}
+
+OUTPUT FORMAT — FOLLOW STRICTLY (DO NOT wrap the whole response in markdown code fences):
+<<<ULTRON_META>>>
+{
+  "project_type": "${isAndroid ? "android_studio" : "multi_file"}",
+  "project_name": "ShortCleanProjectName",
+  "package_name": "com.ultron.projectname",
+  "target_dir": ${JSON.stringify(requestedPath || "")},
+  "open_file": "${isAndroid ? "" : "index.html"}",
+  "open_in_android_studio": ${isAndroid ? "true" : "false"},
+  "build_apk": ${wantsApk ? "true" : "false"},
+  "summary": "2-3 sentence summary of everything built and how to run/play it."
+}
+<<<END_META>>>
+<<<FILE: relative/path/to/file1>>>
+...full complete file content...
+<<<END_FILE>>>
+<<<FILE: relative/path/to/file2>>>
+...full complete file content...
+<<<END_FILE>>>`;
+
+      try {
+        const res = await callGeminiInstant(builderSys, userPrompt, attachment, 24576);
+        statusMsg.remove();
+
+        const built = parseAutonomousBuilderOutput(res.text, requestedPath, isAndroid);
+        if (!built.files || built.files.length === 0) {
+          addChatMessage("bot", res.text || "Could not parse project files. Try switching to Gemini 3.8 Flash or Gemini 4 Hydrogen in the slidebar.", {
+            route: `Builder Notice • ${res.model}`
+          });
+          return;
+        }
+
+        const effectiveDir = built.targetDir || `${state.pcWorkDir}\\${built.projectName}`;
+        const fileListText = [
+          `Target Folder : ${effectiveDir}`,
+          `Project Type  : ${built.isAndroid ? "Android Studio Project (Kotlin/Gradle)" : "Full Multi-File Project"}`,
+          `Files (${built.files.length}):`,
+          ...built.files.map((f) => `  • ${f.path} (${f.content.split(/\r?\n/).length} lines)`)
+        ].join("\n");
+
+        const indexEntry = built.files.find((f) => f.path.toLowerCase() === "index.html");
+        let inlinePreviewHtml = "";
+        if (indexEntry && !built.isAndroid) {
+          inlinePreviewHtml = indexEntry.content;
+          built.files.forEach((f) => {
+            if (f.path.endsWith(".css")) {
+              const escaped = f.path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              inlinePreviewHtml = inlinePreviewHtml.replace(
+                new RegExp(`<link[^>]*href=["']\\.?/?${escaped}["'][^>]*>`, "i"),
+                `<style>\n${f.content}\n</style>`
+              );
+            } else if (f.path.endsWith(".js")) {
+              const escaped = f.path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              inlinePreviewHtml = inlinePreviewHtml.replace(
+                new RegExp(`<script[^>]*src=["']\\.?/?${escaped}["'][^>]*>\\s*<\\/script>`, "i"),
+                `<script>\n${f.content}\n<\/script>`
+              );
+            }
+          });
+        }
+
+        const actionPlan = {
+          action: built.isAndroid ? "build_android_project" : "write_project",
+          deviceTarget: "PC",
+          params: {
+            targetDir: built.targetDir || "",
+            projectName: built.projectName,
+            packageName: built.packageName,
+            files: built.files,
+            openFile: built.openFile,
+            openInAndroidStudio: built.openInAndroidStudio,
+            buildApk: built.buildApk
+          },
+          explanation: built.summary
+        };
+
+        if (state.permissionMode === "allow_all") {
+          addChatMessage("bot", built.summary, {
+            route: `Built • ${res.model}`,
+            manifestText: fileListText,
+            previewHtml: inlinePreviewHtml,
+            previewTargetDir: built.targetDir || "",
+            skipAutoRich: true
+          });
+          await executePlanOnDevice(actionPlan, targetDev);
+        } else {
+          const id = "ap_" + Math.random().toString(36).slice(2, 9);
+          state.pendingApprovals[id] = { plan: actionPlan, targetDev };
+          addChatMessage("bot", built.summary, {
+            route: `Ready to Write -> ${targetDev.name}`,
+            manifestText: fileListText,
+            previewHtml: inlinePreviewHtml,
+            previewTargetDir: built.targetDir || "",
+            approvalId: id,
+            targetLabel: `${targetDev.name} (PC)`,
+            plan: actionPlan,
+            skipAutoRich: true
+          });
+        }
+
+        state.chatHistory.push(
+          { role: "user", content: userPrompt },
+          { role: "assistant", content: `Built ${built.projectName} (${built.files.length} files) for ${effectiveDir}: ${built.summary}` }
+        );
+      } catch (err) {
+        statusMsg.remove();
+        throw err;
+      }
+    }
+
+    function parseDeviceCommandFallback(prompt, targetDev) {
+      const lower = prompt.toLowerCase();
+      const urlMatch = prompt.match(/https?:\/\/[^\s]+/i);
+      const isPhone = targetDev?.type === "Phone" || /phone|a21s|battery|torch|flashlight|vibrate|toast/i.test(lower);
+
+      if (isPhone) {
+        if (/^(call|dial|ring)\s+/i.test(lower)) {
+          const target = prompt.replace(/^(call|dial|ring)\s+/i, "").replace(/\s+on\s+(my\s+)?(phone|samsung|a21s).*$/i, "").trim();
+          return { action: "call_contact", params: { query: target }, explanation: `Call ${target} on phone` };
+        }
+        if (/\b(stop\s+auto\s*play|stop\s+playing|stop\s+game\s+bot)\b/i.test(lower)) {
+          return { action: "stop_autoplay", params: {}, explanation: "Stop autonomous gameplay on phone" };
+        }
+        if (/\b(auto\s*play|play\s+.+\s+on\s+(its\s+)?own|play\s+game)\b/i.test(lower) || /^play\s+/i.test(lower)) {
+          const gameName = prompt.replace(/^(auto\s*play|play)\s+/i, "").replace(/\s+(on\s+(its\s+)?own|automatically|on\s+my\s+phone|game).*$/i, "").trim();
+          const mode = /runner|subway|temple/i.test(lower) ? "runner" : /swipe/i.test(lower) ? "swipe_up" : "clicker";
+          return { action: "play_game", params: { game: gameName || "game", autoplay: true, mode, durationSec: 45 }, explanation: `Launch & auto-play ${gameName || "game"} (${mode} mode) on phone` };
+        }
+        if (/battery|charge|power/i.test(lower)) return { action: "battery", params: {}, explanation: "Check phone battery status" };
+        if (/torch|flashlight/i.test(lower)) return { action: "torch", params: { state: /off/i.test(lower) ? "off" : "on" }, explanation: "Toggle phone flashlight" };
+        if (/vibrate/i.test(lower)) return { action: "vibrate", params: { duration: 400 }, explanation: "Vibrate phone" };
+        if (/\b(go\s+home|home\s+screen|press\s+home)\b/i.test(lower)) return { action: "home", params: {}, explanation: "Return to Home screen on phone" };
+        if (/\b(press\s+back|go\s+back)\b/i.test(lower)) return { action: "back", params: {}, explanation: "Press Back on phone" };
+        if (/\b(recents|recent\s+apps)\b/i.test(lower)) return { action: "recents", params: {}, explanation: "Open Recent Apps on phone" };
+        if (/\b(lock\s+screen|lock\s+phone|lock\s+my\s+phone)\b/i.test(lower)) return { action: "lock", params: {}, explanation: "Lock phone screen" };
+        if (/\bswipe\s+up\b/i.test(lower)) return { action: "swipe", params: { x1: 360, y1: 1200, x2: 360, y2: 350, duration: 300 }, explanation: "Swipe up on phone" };
+        if (/\bswipe\s+down\b/i.test(lower)) return { action: "swipe", params: { x1: 360, y1: 350, x2: 360, y2: 1200, duration: 300 }, explanation: "Swipe down on phone" };
+        if (urlMatch) return { action: "open_url", params: { url: urlMatch[0] }, explanation: "Open URL on phone" };
+        if (/^(open|launch)\s+/i.test(lower)) {
+          const app = prompt.replace(/^(open|launch)\s+/i, "").replace(/\s+on\s+(my\s+)?(phone|samsung|a21s).*$/i, "").trim();
+          return { action: "open_app", params: { app }, explanation: `Open ${app} on phone` };
+        }
+        if (/speak|say|voice/i.test(lower)) return { action: "tts", params: { text: prompt.replace(/^(say|speak)\s+/i, "") }, explanation: "Speak aloud on phone" };
+        if (/notify|toast|alert/i.test(lower)) return { action: "notify", params: { title: "ULTRON", content: prompt }, explanation: "Send notification to phone" };
+        return { action: "toast", params: { text: prompt }, explanation: "Display message on phone" };
+      }
+
+      if (/status|system|disk|ram|cpu|info|android studio check/i.test(lower)) return { action: "system_info", params: {}, explanation: "Read PC & Android Studio status" };
+      if (urlMatch) return { action: "open_url", params: { url: urlMatch[0] }, explanation: "Open URL in PC browser" };
+      if (/^open\s+/i.test(lower)) {
+        const app = prompt.replace(/^open\s+/i, "").trim();
+        return { action: "open_app", params: { app }, explanation: `Launch ${app} on PC` };
+      }
+      if (/list\s+files|ls|dir/i.test(lower)) {
+        return { action: "list_files", params: { targetDir: extractRequestedPath(prompt) || "" }, explanation: "List files on PC" };
+      }
+      if (/^run\s+|^cmd\s+|^shell\s+/i.test(lower)) {
+        const command = prompt.replace(/^(run|cmd|shell)\s+/i, "").trim();
+        return { action: "shell", params: { command }, explanation: `Run shell command on PC: ${command}` };
+      }
+      return {
+        action: "write_project",
+        params: {
+          targetDir: extractRequestedPath(prompt) || "",
+          projectName: "ultron_note_" + Date.now(),
+          files: [{ path: "note.txt", content: prompt }],
+          openFile: "note.txt"
+        },
+        explanation: "Save file on PC"
+      };
+    }
+
+    function resolveTargetDevice(hintType = null) {
+      const devices = Object.values(state.devices);
+      if (state.targetDeviceId && state.targetDeviceId !== "auto" && state.devices[state.targetDeviceId]) {
+        const picked = state.devices[state.targetDeviceId];
+        if (picked.source === "browser") {
+          const nativeFallback = devices.find((d) => d.source !== "browser" && isDeviceActive(d));
+          if (nativeFallback) return nativeFallback;
+        }
+        return picked;
+      }
+      if (hintType) {
+        const match = devices.find((d) => d.type.toLowerCase() === hintType.toLowerCase() && isDeviceActive(d) && d.source !== "browser")
+          || devices.find((d) => d.type.toLowerCase() === hintType.toLowerCase() && isDeviceActive(d));
+        if (match) return match;
+      }
+      return devices.find((d) => d.source !== "browser" && isDeviceActive(d))
+        || devices.find((d) => isDeviceActive(d))
+        || { id: state.thisDeviceId, name: state.thisDeviceName, type: state.thisDeviceType, source: "browser" };
+    }
+
+    async function executePlanOnDevice(plan, targetDev) {
+      const targetName = targetDev.name;
+
+      if (targetDev.type === "PC" && state.localPcAlive && state.pcBridgeUrl) {
+        try {
+          const res = await fetch(`${state.pcBridgeUrl.replace(/\/$/, "")}/execute`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Ultron-Token": state.bridgeToken || ""
+            },
+            body: JSON.stringify({
+              action: plan.action,
+              params: plan.params || {},
+              workDir: state.pcWorkDir
+            })
+          });
+          const data = await res.json();
+          addChatMessage("bot", data.output || data.message || JSON.stringify(data, null, 2), {
+            route: `Executed on ${targetName}`,
+            skipAutoRich: true
+          });
+          return;
+        } catch (err) {
+          addChatMessage("bot", `Local PC Bridge notice: ${err.message}. Trying Firebase cloud relay...`, {
+            route: "Bridge Fallback"
+          });
+        }
+      }
+
+      const db = getRtdbSafe();
+      if (db && state.user) {
+        try {
+          const cmdRef = db.ref(`ultron/${state.user.uid}/commands`).push();
+          await cmdRef.set({
+            targetDeviceId: targetDev.id,
+            targetDeviceName: targetDev.name,
+            targetType: targetDev.type,
+            action: plan.action,
+            params: plan.params || {},
+            workDir: state.pcWorkDir,
+            status: "queued",
+            createdAt: Date.now()
+          });
+          const hasActiveNativeAgent = Object.values(state.devices).some((d) => d.source !== "browser" && d.type === targetDev.type && isDeviceActive(d));
+          const warnNote = hasActiveNativeAgent
+            ? ""
+            : `\n\n⚠️ Notice: No native ${targetDev.type} background agent appears Active right now. Make sure ProjectULTRON.exe (PC) or ULTRON Agent APK (Phone) is running with your agent_config.json so it can execute this immediately.`;
+          addChatMessage("bot", `Sent "${plan.action}" to ${targetName} via Firebase. Waiting for device response...${warnNote}`, {
+            route: `Queued -> ${targetName}`
+          });
+          return;
+        } catch (err) {
+          addChatMessage("bot", `Firebase RTDB error: ${err.message}. Publish database.rules.json in Firebase Console.`, {
+            route: "RTDB Error"
+          });
+          return;
+        }
+      }
+
+      addChatMessage("bot", `Could not reach ${targetName}. Run start_pc.bat (PC) or phone_agent.py (Android Termux).`, {
+        route: "Device Unreachable"
+      });
+    }
+
+    function dispatchDeviceCommandWithGuardrail(plan, forcedTarget = null) {
+      const targetDev = forcedTarget || resolveTargetDevice(plan.deviceTarget);
+      if (state.permissionMode === "allow_all") {
+        executePlanOnDevice(plan, targetDev);
+      } else {
+        const id = "ap_" + Math.random().toString(36).slice(2, 9);
+        state.pendingApprovals[id] = { plan, targetDev };
+        addChatMessage("bot", plan.explanation || `Ready to run "${plan.action}" on ${targetDev.name}.`, {
+          route: `Pending -> ${targetDev.name}`,
+          approvalId: id,
+          targetLabel: `${targetDev.name} (${targetDev.type})`,
+          plan
+        });
+      }
+    }
+
+    window.__approve = (id) => {
+      const entry = state.pendingApprovals[id];
+      if (!entry) return;
+      delete state.pendingApprovals[id];
+      document.getElementById(`appr-${id}`)?.remove();
+      executePlanOnDevice(entry.plan, entry.targetDev);
+    };
+
+    window.__cancel = (id) => {
+      delete state.pendingApprovals[id];
+      document.getElementById(`appr-${id}`)?.remove();
+      addChatMessage("bot", "Device action cancelled.", { route: "Guardrail" });
+    };
+
+    // ================= MAIN SEND FLOW (1.ONLINE / 2.DEVICE / 3.AUTO) =================
+    async function handleSend() {
+      const input = $("chatInput");
+      const text = input.value.trim();
+      if (!text && !state.attachment) return;
+
+      const att = state.attachment;
+      input.value = "";
+      input.style.height = "auto";
+      state.attachment = null;
+      $("attachPreview").style.display = "none";
+
+      const selectedDevObj = state.targetDeviceId === "auto" ? null : state.devices[state.targetDeviceId];
+      const userRouteLabel = `${state.mode.toUpperCase()} • ${selectedDevObj ? selectedDevObj.name : "Auto Device"}`;
+      addChatMessage("user", text + (att ? `\n[Attached: ${att.name}]` : ""), { route: userRouteLabel });
+
+      const activeListText = Object.values(state.devices)
+        .map((d) => `${d.name} (${d.type}, ${isDeviceActive(d) ? "Active" : "Offline"})`)
+        .join(", ");
+
+      let streamingDiv = null;
+      try {
+        if (isImageModel(state.geminiModel) && state.mode !== "device") {
+          if (!state.geminiApiKey) {
+            addChatMessage("bot", "Add your Google Gemini API Key in ⚙ Settings first.", { route: "Setup Needed" });
+            return;
+          }
+          const waitEl = addChatMessage("bot", "Generating image...", { route: `Image • ${state.geminiModel}` });
+          try {
+            const res = await callGeminiInstant("", text || "Edit this image", att);
+            waitEl.remove();
+            addChatMessage("bot", res.text || "Image generated.", {
+              route: `Image • ${res.model}`,
+              images: res.images
+            });
+          } catch (e) {
+            waitEl.remove();
+            throw e;
+          }
+          return;
+        }
+
+
+        // Instant Owner / Creator Identity Reply (works in all modes, even offline/no API key)
+        if (isOwnerIdentityQuestion(text)) {
+          state.chatHistory.push({ role: "user", content: text }, { role: "assistant", content: OWNER_REPLY_TEXT });
+          addChatMessage("bot", OWNER_REPLY_TEXT, { route: "Owner Identity" });
+          return;
+        }
+
+        // 1. Check /Slash Commands
+        if (await tryHandleSlashCommand(text)) return;
+        // 2. Check @Plugins (Canva, Google Drive, Gmail, GitHub, YouTube)
+        if (await tryHandlePluginCommand(text)) return;
+
+        const hasExplicitPath = Boolean(extractRequestedPath(text));
+        const wantsProjectBuild = isProjectBuildIntent(text);
+        const wantsAndroidStudio = isAndroidStudioIntent(text);
+
+        // MODE 1: ONLINE
+        if (state.mode === "online") {
+          if (!state.geminiApiKey) {
+            addChatMessage("bot", "Add your Google Gemini API Key in ⚙ Settings to start chatting.", { route: "Setup Needed" });
+            return;
+          }
+          const sys = `You are PROJECT ULTRON in INSTANT ONLINE MODE. Answer concisely and fast.\n${OWNER_SYSTEM_RULE}
+- If asked to create a website, app UI, or playable 2D/3D browser game, provide a COMPLETE single-file runnable HTML document inside a \`\`\`html ... \`\`\` code block so it previews live in chat.
+- If asked to create a graphic, icon, logo, or diagram, provide clean inline <svg viewBox="0 0 600 360">...</svg> artwork so it renders visually in chat.`;
+
+          streamingDiv = addChatMessage("bot", "...", { route: `Streaming (${state.geminiModel})...`, streaming: true });
+          const bodyEl = streamingDiv.querySelector(".msg-body");
+          const badgeEl = streamingDiv.querySelector(".route-badge");
+          const container = $("chatMessages");
+
+          const result = await streamGeminiToMessage(sys, text || "Analyze the attached image.", att, (partial, usedModel) => {
+            setMessageBodyWithLinks(bodyEl, partial);
+            badgeEl.textContent = `Online • ${usedModel}`;
+            container.scrollTop = container.scrollHeight;
+          });
+
+          if (result?.text) {
+            state.chatHistory.push({ role: "user", content: text }, { role: "assistant", content: result.text });
+            recordMessageToActiveChat("bot", result.text, badgeEl.textContent || "Online");
+            attachRichOutputsToMessage(streamingDiv, result.text);
+            appendMessageTools(streamingDiv, () => bodyEl.textContent);
+          }
+          return;
+        }
+
+        // MODE 2: DEVICE
+        if (state.mode === "device") {
+          const targetDev = resolveTargetDevice(wantsAndroidStudio || hasExplicitPath ? "PC" : null);
+
+          if ((wantsProjectBuild || wantsAndroidStudio) && targetDev.type === "PC") {
+            await runAutonomousProjectBuilder(text, targetDev, att);
+            return;
+          }
+
+          let plan = null;
+          if (state.geminiApiKey && !isImageModel(state.geminiModel)) {
+            const thinkingEl = addChatMessage("bot", "Preparing device action...", { route: `Device -> ${targetDev.name}` });
+            try {
+              const reqPath = extractRequestedPath(text);
+              const sys = `You are PROJECT ULTRON's Device Action Planner. Convert the user's request into a SINGLE valid JSON object ONLY (no markdown).
+Target device: ${targetDev.name} (${targetDev.type}).
+${reqPath ? `User specified exact path: ${reqPath}` : ""}
+EXACT PC action schemas:
+- {"action":"open_app","params":{"app":"notepad|calc|explorer|vscode|chrome|edge|android studio|..."},"explanation":"..."}
+- {"action":"open_url","params":{"url":"https://..."},"explanation":"..."}
+- {"action":"system_info","params":{},"explanation":"..."}
+- {"action":"list_files","params":{"targetDir":"optional exact folder path"},"explanation":"..."}
+- {"action":"shell","params":{"command":"...","cwd":"optional exact folder path"},"explanation":"..."}
+- {"action":"write_project","params":{"targetDir":"optional exact folder path","projectName":"name","files":[{"path":"file.txt","content":"..."}],"openFile":"file.txt"},"explanation":"..."}
+EXACT Phone action schemas:
+- call_contact ({"query":"contact name or phone number"}), play_game ({"game":"game name","autoplay":true,"mode":"clicker|runner|swipe_up|tap_loop"}), auto_play ({"mode":"clicker|runner|swipe_up|tap_loop","durationSec":30}), stop_autoplay ({}), open_app ({"app":"gmail|youtube|whatsapp|chrome|camera|settings|..."}), open_url ({"url":"https://..."}), battery ({}), system_info ({}), torch ({"state":"on|off"}), vibrate ({"duration":400}), notify ({"title":"ULTRON","content":"..."}), toast ({"text":"..."}), tts ({"text":"..."}), back ({}), home ({}), recents ({}), lock ({}), tap ({"x":360,"y":640}), swipe ({"x1":360,"y1":1200,"x2":360,"y2":350,"duration":300}), write_file ({"filename":"...","content":"..."}), shell ({"command":"..."}).`;
+              const res = await callGeminiInstant(sys, text, att, 4096);
+              const jsonMatch = res?.text?.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                try { plan = JSON.parse(jsonMatch[0]); } catch (_) {}
+              }
+            } finally {
+              thinkingEl.remove();
+            }
+          }
+
+          if (!plan || !plan.action) plan = parseDeviceCommandFallback(text, targetDev);
+          dispatchDeviceCommandWithGuardrail(plan, targetDev);
+          return;
+        }
+
+        // MODE 3: AUTO
+        if (wantsAndroidStudio || (wantsProjectBuild && (hasExplicitPath || /\b(on my pc|in folder|in directory|save to pc|to my pc)\b/i.test(text)))) {
+          const pcTarget = selectedDevObj?.type === "PC" ? selectedDevObj : resolveTargetDevice("PC");
+          await runAutonomousProjectBuilder(text, pcTarget, att);
+          return;
+        }
+
+        const looksLikeDeviceIntent = hasExplicitPath || /\b(call |dial |ring |play |auto\s*play|stop\s+auto\s*play|go\s+home|press\s+back|lock\s+phone|swipe\s+|open|launch|battery|torch|flashlight|vibrate|pc status|system info|disk|shell|run |cmd |notify|toast|folder|list files|take photo|camera|on my pc|on my phone|on samsung|on a21s)\b/i.test(text);
+
+        if (!state.geminiApiKey) {
+          if (looksLikeDeviceIntent) {
+            const targetDev = resolveTargetDevice(/phone|a21s|battery|torch|vibrate|toast|notify|camera|photo/i.test(text) ? "Phone" : "PC");
+            dispatchDeviceCommandWithGuardrail(parseDeviceCommandFallback(text, targetDev), targetDev);
+          } else {
+            addChatMessage("bot", "Add your Google Gemini API Key in ⚙ Settings for instant cloud AI & autonomous project building. Basic device commands work right now!", { route: "Setup Needed" });
+          }
+          return;
+        }
+
+        if (!looksLikeDeviceIntent) {
+          const sys = `You are PROJECT ULTRON, an instant cross-device AI assistant. Answer concisely and immediately.\n${OWNER_SYSTEM_RULE}
+- If asked to build a website, app, or playable 2D/3D browser game, include a COMPLETE single-file \`\`\`html ... \`\`\` block for live preview (with a one-click Save to PC button).
+- If asked to create a graphic/logo/diagram, include clean inline <svg viewBox="0 0 600 360">...</svg>.`;
+
+          streamingDiv = addChatMessage("bot", "...", { route: `Auto (${state.geminiModel})...`, streaming: true });
+          const bodyEl = streamingDiv.querySelector(".msg-body");
+          const badgeEl = streamingDiv.querySelector(".route-badge");
+          const container = $("chatMessages");
+
+          const result = await streamGeminiToMessage(sys, text || "Analyze the attached image.", att, (partial, usedModel) => {
+            setMessageBodyWithLinks(bodyEl, partial);
+            badgeEl.textContent = `Auto -> Online • ${usedModel}`;
+            container.scrollTop = container.scrollHeight;
+          });
+
+          if (result?.text) {
+            state.chatHistory.push({ role: "user", content: text }, { role: "assistant", content: result.text });
+            recordMessageToActiveChat("bot", result.text, badgeEl.textContent || "Online");
+            attachRichOutputsToMessage(streamingDiv, result.text);
+            appendMessageTools(streamingDiv, () => bodyEl.textContent);
+          }
+          return;
+        }
+
+        const thinkingEl = addChatMessage("bot", "Routing across devices...", { route: `Auto (${state.geminiModel})` });
+        const reqPath = extractRequestedPath(text);
+        const autoSys = `You are PROJECT ULTRON in AUTO MODE. Connected devices: [${activeListText}].\n${OWNER_SYSTEM_RULE}
+${reqPath ? `User specified exact path: ${reqPath}` : ""}
+Respond ONLY as valid JSON:
+{
+  "route": "online" | "device" | "hybrid",
+  "chat_reply": "Short helpful reply",
+  "device_action": null | {
+    "deviceTarget": "PC" | "Phone",
+    "action": "open_app|open_url|write_project|shell|system_info|list_files|battery|torch|vibrate|notify|toast|tts|photo",
+    "params": {},
+    "explanation": "short summary"
+  }
+}`;
+        const res = await callGeminiInstant(autoSys, text, att, 4096);
+        thinkingEl.remove();
+
+        let parsed = null;
+        const m = res?.text?.match(/\{[\s\S]*\}/);
+        if (m) {
+          try { parsed = JSON.parse(m[0]); } catch (_) {}
+        }
+
+        if (!parsed) {
+          addChatMessage("bot", res?.text || "Done.", { route: `Auto • ${res?.model || ""}` });
+          return;
+        }
+
+        if (parsed.chat_reply) {
+          state.chatHistory.push({ role: "user", content: text }, { role: "assistant", content: parsed.chat_reply });
+          addChatMessage("bot", parsed.chat_reply, {
+            route: parsed.route === "hybrid" ? "Auto -> Online + Device" : "Auto -> Online"
+          });
+        }
+
+        if ((parsed.route === "device" || parsed.route === "hybrid") && parsed.device_action?.action) {
+          const targetDev = selectedDevObj || resolveTargetDevice(parsed.device_action.deviceTarget);
+          dispatchDeviceCommandWithGuardrail(parsed.device_action, targetDev);
+        }
+      } catch (err) {
+        if (streamingDiv) streamingDiv.remove();
+        addChatMessage("bot", `Error: ${err.message}\n\nTip: Pick another model from the Model Slidebar on the left or click "↻ Sync" to load all active models for your API key.`, { route: "Error" });
+      }
+    }
+
+    // ================= SETTINGS & AGENT CONFIG EXPORT =================
+    function populateSettingsFields() {
+      $("geminiApiKey").value = state.geminiApiKey;
+      $("thisDeviceName").value = state.thisDeviceName;
+      $("thisDeviceType").value = state.thisDeviceType;
+      $("pcBridgeUrl").value = state.pcBridgeUrl;
+      $("bridgeToken").value = state.bridgeToken;
+      $("pcWorkDir").value = state.pcWorkDir;
+      if ($("githubUserInput")) $("githubUserInput").value = state.githubUser || "aymanchowdhury1";
+      if ($("githubTokenInput")) $("githubTokenInput").value = state.githubToken || "";
+    }
+
+    function downloadAgentConfig() {
+      const cfg = {
+        uid: state.user?.uid || "",
+        ownerName: state.user?.displayName || "Owner",
+        apiKey: FIREBASE_CONFIG.apiKey,
+        firebaseDatabaseUrl: FIREBASE_CONFIG.databaseURL,
+        idToken: state.idToken || "",
+        refreshToken: state.user?.refreshToken || "",
+        bridgeToken: state.bridgeToken || "ultron-secret-token",
+        pcWorkDir: state.pcWorkDir || "D:\\ULTRON_Workspace",
+        pcDeviceName: state.user?.displayName ? `${state.user.displayName.split(" ")[0]}-PC` : "My-PC",
+        phoneDeviceName: "SAMSUNG GALAXY A21S"
+      };
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(cfg, null, 2)], { type: "application/json" }));
+      a.download = "agent_config.json";
+      a.click();
+    }
+
+
+    // ================= MULTIPLE CHATS (CREATE / RENAME / DELETE / FIREBASE SYNC) =================
+    function createNewChat(switchImmediately = true) {
+      const id = "chat_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+      state.chats[id] = {
+        id,
+        title: "New Chat",
+        messages: [],
+        updatedAt: Date.now()
+      };
+      if (switchImmediately) {
+        state.activeChatId = id;
+        renderActiveChatMessages();
+      }
+      saveLocalPrefs();
+      syncChatsToFirebase();
+      renderChatList();
+      return id;
+    }
+
+    function ensureActiveChat() {
+      if (!state.activeChatId || !state.chats[state.activeChatId]) {
+        const ids = Object.keys(state.chats);
+        if (ids.length > 0) {
+          ids.sort((a, b) => (state.chats[b].updatedAt || 0) - (state.chats[a].updatedAt || 0));
+          state.activeChatId = ids[0];
+        } else {
+          createNewChat(false);
+        }
+      }
+      return state.chats[state.activeChatId];
+    }
+
+    function recordMessageToActiveChat(role, text, route = "") {
+      const chat = ensureActiveChat();
+      if (!Array.isArray(chat.messages)) chat.messages = [];
+      chat.messages.push({ role, text, route, ts: Date.now() });
+      if (chat.messages.length > 80) chat.messages = chat.messages.slice(-80);
+      if (role === "user" && (chat.title === "New Chat" || !chat.title)) {
+        chat.title = String(text || "New Chat").replace(/\s+/g, " ").trim().slice(0, 34) || "New Chat";
+      }
+      chat.updatedAt = Date.now();
+      saveLocalPrefs();
+      syncChatsToFirebase();
+      renderChatList();
+    }
+
+    function renameChat(chatId) {
+      const chat = state.chats[chatId];
+      if (!chat) return;
+      const next = prompt("Rename chat:", chat.title || "Chat");
+      if (next === null) return;
+      const clean = next.trim();
+      if (!clean) return;
+      chat.title = clean.slice(0, 48);
+      chat.updatedAt = Date.now();
+      saveLocalPrefs();
+      syncChatsToFirebase();
+      renderChatList();
+    }
+
+    function deleteChat(chatId) {
+      const chat = state.chats[chatId];
+      if (!chat) return;
+      if (!confirm(`Delete chat "${chat.title}"?`)) return;
+      delete state.chats[chatId];
+      const db = getRtdbSafe();
+      if (db && state.user) {
+        db.ref(`ultron/${state.user.uid}/chats/${chatId}`).remove().catch(() => {});
+      }
+      if (state.activeChatId === chatId) {
+        state.activeChatId = "";
+        ensureActiveChat();
+        renderActiveChatMessages();
+      }
+      saveLocalPrefs();
+      renderChatList();
+    }
+
+    function switchChat(chatId) {
+      if (!state.chats[chatId]) return;
+      state.activeChatId = chatId;
+      saveLocalPrefs();
+      renderChatList();
+      renderActiveChatMessages();
+      if (isMobileViewport()) toggleSidebar(false);
+    }
+
+    function renderChatList() {
+      const listEl = $("chatThreadList");
+      if (!listEl) return;
+      ensureActiveChat();
+      const threads = Object.values(state.chats).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      listEl.innerHTML = "";
+      threads.forEach((ch) => {
+        const row = document.createElement("div");
+        row.className = `chat-thread-item ${ch.id === state.activeChatId ? "active" : ""}`;
+        row.innerHTML = `
+          <span class="chat-thread-title" title="${escapeHtml(ch.title || "Chat")}">${escapeHtml(ch.title || "New Chat")}</span>
+          <div class="chat-thread-actions">
+            <button class="ren-btn" title="Rename chat">&#9998;</button>
+            <button class="del-btn danger" title="Delete chat">&#128465;</button>
+          </div>
+        `;
+        row.addEventListener("click", (e) => {
+          if (e.target.closest(".chat-thread-actions")) return;
+          switchChat(ch.id);
+        });
+        row.querySelector(".ren-btn").addEventListener("click", (e) => { e.stopPropagation(); renameChat(ch.id); });
+        row.querySelector(".del-btn").addEventListener("click", (e) => { e.stopPropagation(); deleteChat(ch.id); });
+        listEl.appendChild(row);
+      });
+    }
+
+    function renderActiveChatMessages() {
+      const container = $("chatMessages");
+      if (!container) return;
+      container.innerHTML = "";
+      const chat = ensureActiveChat();
+      state.chatHistory = [];
+      const msgs = Array.isArray(chat.messages) ? chat.messages : [];
+      if (msgs.length === 0) {
+        addChatMessage("bot", `New chat ready (${chat.title}).\n\n• Switch between Chats, Plugins (Canva, Drive, Gmail, GitHub, YouTube), and Models in the left ☰ Menu.\n• Works identically on PC & Phone!`, {
+          route: `ULTRON v15 • ${state.geminiModel}`,
+          skipRecord: true
+        });
+        return;
+      }
+      msgs.forEach((m) => {
+        state.chatHistory.push({ role: m.role === "bot" ? "assistant" : "user", content: m.text });
+        addChatMessage(m.role, m.text, { route: m.route || "", skipRecord: true });
+      });
+    }
+
+    function syncChatsToFirebase() {
+      const db = getRtdbSafe();
+      if (!db || !state.user) return;
+      const chat = state.chats[state.activeChatId];
+      if (chat) {
+        db.ref(`ultron/${state.user.uid}/chats/${chat.id}`).set(chat).catch(() => {});
+      }
+    }
+
+    function loadChatsFromFirebase() {
+      const db = getRtdbSafe();
+      if (!db || !state.user) return;
+      db.ref(`ultron/${state.user.uid}/chats`).once("value").then((snap) => {
+        const remote = snap.val();
+        if (remote && typeof remote === "object") {
+          Object.keys(remote).forEach((cid) => {
+            const r = remote[cid];
+            const l = state.chats[cid];
+            if (!l || (r.updatedAt || 0) >= (l.updatedAt || 0)) {
+              state.chats[cid] = r;
+            }
+          });
+          saveLocalPrefs();
+          renderChatList();
+          renderActiveChatMessages();
+          if ($("chatSyncStatus")) $("chatSyncStatus").textContent = `Synced ${Object.keys(state.chats).length} chats across PC & Phone.`;
+        }
+      }).catch(() => {});
+    }
+
+    // ================= REAL CONNECTED PLUGINS (@canva, @drive, @gmail, @github, @youtube) =================
+    const PLUGIN_DEFS = [
+      {
+        id: "canva",
+        handle: "@canva",
+        name: "Canva",
+        desc: "Connect Canva Connect API or Workspace to create posters, slides, logos & list designs.",
+        quick: [
+          { label: "@canva presentation", prompt: "@canva create presentation about Project ULTRON" },
+          { label: "@canva designs", prompt: "@canva list my designs" }
+        ]
+      },
+      {
+        id: "drive",
+        handle: "@drive",
+        name: "Google Drive",
+        desc: "Connect your Google Drive via OAuth to search real files & create Docs/Sheets.",
+        quick: [
+          { label: "@drive list", prompt: "@drive list recent files" },
+          { label: "@drive new doc", prompt: "@drive create doc Meeting Notes" }
+        ]
+      },
+      {
+        id: "gmail",
+        handle: "@gmail",
+        name: "Gmail",
+        desc: "Connect Gmail via OAuth to read your latest inbox messages, search & draft emails.",
+        quick: [
+          { label: "@gmail inbox", prompt: "@gmail check latest emails" },
+          { label: "@gmail draft", prompt: "@gmail compose email subject Project Update" }
+        ]
+      },
+      {
+        id: "github",
+        handle: "@github",
+        name: "GitHub",
+        desc: "Connect GitHub (username + optional PAT) to list repos, search code & create repos.",
+        quick: [
+          { label: "@github repos", prompt: "@github list my repos" },
+          { label: "@github profile", prompt: "@github open my profile" }
+        ]
+      },
+      {
+        id: "youtube",
+        handle: "@youtube",
+        name: "YouTube",
+        desc: "Connect YouTube API or Direct Player to search videos & play on PC or Phone.",
+        quick: [
+          { label: "@youtube search", prompt: "@youtube search lofi coding music" }
+        ]
+      }
+    ];
+
+    const SLASH_COMMANDS = [
+      { cmd: "/pc", desc: "Run a command directly on your Windows PC", insert: "/pc " },
+      { cmd: "/phone", desc: "Run a command directly on your Android Phone", insert: "/phone " },
+      { cmd: "/build", desc: "Build a full multi-file project (2D game, website, Python)", insert: "/build " },
+      { cmd: "/apk", desc: "Build a full Android Studio Kotlin/Gradle APK project", insert: "/apk " },
+      { cmd: "/call", desc: "Call a contact or phone number on your Android Phone", insert: "/call " },
+      { cmd: "/play", desc: "Launch & auto-play a game on your Android Phone", insert: "/play " },
+      { cmd: "/open", desc: "Open any app or URL on PC or Phone", insert: "/open " },
+      { cmd: "/status", desc: "Check live PC & Phone system/battery status", insert: "/status" },
+      { cmd: "/new", desc: "Start a new chat thread", insert: "/new" },
+      { cmd: "/clear", desc: "Clear messages in the current chat view", insert: "/clear" },
+      { cmd: "/help", desc: "Show all @plugins and /commands", insert: "/help" }
+    ];
+
+    function isPluginConnected(id) {
+      if (id === "drive") return Boolean(state.googleAccessToken && state.pluginConnections.drive);
+      if (id === "gmail") return Boolean(state.gmailAccessToken && state.pluginConnections.gmail);
+      if (id === "github") return Boolean(state.githubUser);
+      if (id === "canva") return Boolean(state.canvaToken || state.pluginConnections.canva);
+      if (id === "youtube") return Boolean(state.youtubeApiKey || state.googleAccessToken || state.pluginConnections.youtube);
+      return false;
+    }
+
+    async function connectPlugin(pluginId) {
+      try {
+        if (pluginId === "drive") {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.addScope("https://www.googleapis.com/auth/drive.readonly");
+          provider.addScope("https://www.googleapis.com/auth/drive.file");
+          const cred = await firebase.auth().signInWithPopup(provider);
+          const tok = cred?.credential?.accessToken || "";
+          if (!tok) throw new Error("No Google Drive access token returned.");
+          state.googleAccessToken = tok;
+          state.pluginConnections.drive = true;
+          state.plugins.drive = true;
+          saveLocalPrefs();
+          renderPluginsSidebar();
+          addChatMessage("bot", "✅ Google Drive connected! Try typing: @drive list recent files  or  @drive search resume", { route: "Plugin • @drive" });
+          return;
+        }
+
+        if (pluginId === "gmail") {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.addScope("https://www.googleapis.com/auth/gmail.readonly");
+          provider.addScope("https://www.googleapis.com/auth/gmail.compose");
+          const cred = await firebase.auth().signInWithPopup(provider);
+          const tok = cred?.credential?.accessToken || "";
+          if (!tok) throw new Error("No Gmail access token returned.");
+          state.gmailAccessToken = tok;
+          state.pluginConnections.gmail = true;
+          state.plugins.gmail = true;
+          saveLocalPrefs();
+          renderPluginsSidebar();
+          addChatMessage("bot", "✅ Gmail connected! Try typing: @gmail check inbox  or  @gmail search invoice", { route: "Plugin • @gmail" });
+          return;
+        }
+
+        if (pluginId === "github") {
+          const u = prompt("Enter your GitHub Username:", state.githubUser || "aymanchowdhury1");
+          if (u === null) return;
+          const t = prompt("Optional: Paste GitHub Personal Access Token (for private repos & creating repos), or leave blank for public access:", state.githubToken || "");
+          state.githubUser = u.trim() || "aymanchowdhury1";
+          if (t !== null) state.githubToken = t.trim();
+          state.pluginConnections.github = true;
+          state.plugins.github = true;
+          saveLocalPrefs();
+          renderPluginsSidebar();
+          addChatMessage("bot", `✅ GitHub connected for @${state.githubUser}! Try typing: @github list repos`, { route: "Plugin • @github" });
+          return;
+        }
+
+        if (pluginId === "canva") {
+          const tok = prompt(
+            "Connect Canva:\nPaste your Canva Connect API Access Token (from canva.dev) for live design listing, OR click OK with blank to connect Canva Direct Workspace Bridge:",
+            state.canvaToken || ""
+          );
+          if (tok === null) return;
+          state.canvaToken = tok.trim();
+          state.pluginConnections.canva = true;
+          state.plugins.canva = true;
+          saveLocalPrefs();
+          renderPluginsSidebar();
+          addChatMessage("bot", `✅ Canva connected (${state.canvaToken ? "Canva Connect API" : "Workspace Bridge"})! Try typing: @canva create presentation about AI`, { route: "Plugin • @canva" });
+          return;
+        }
+
+        if (pluginId === "youtube") {
+          const key = prompt("Optional: Enter a YouTube Data API v3 Key for instant live video search cards (or leave blank to use YouTube Direct Player):", state.youtubeApiKey || "");
+          if (key === null) return;
+          state.youtubeApiKey = key.trim();
+          state.pluginConnections.youtube = true;
+          state.plugins.youtube = true;
+          saveLocalPrefs();
+          renderPluginsSidebar();
+          addChatMessage("bot", "✅ YouTube connected! Try typing: @youtube play lofi coding beats", { route: "Plugin • @youtube" });
+          return;
+        }
+      } catch (err) {
+        addChatMessage("bot", `Plugin connection notice (${pluginId}): ${err.message}\n\nNote: For Google Drive/Gmail OAuth, make sure your Google account is added as a Test User in Google Cloud Console -> OAuth consent screen for project jarvis-f1be9.`, { route: "Plugin Auth" });
+      }
+    }
+
+    function disconnectPlugin(pluginId) {
+      if (pluginId === "drive") state.googleAccessToken = "";
+      if (pluginId === "gmail") state.gmailAccessToken = "";
+      if (pluginId === "canva") state.canvaToken = "";
+      if (pluginId === "github") state.githubToken = "";
+      if (pluginId === "youtube") state.youtubeApiKey = "";
+      state.pluginConnections[pluginId] = false;
+      saveLocalPrefs();
+      renderPluginsSidebar();
+    }
+
+    function renderPluginsSidebar() {
+      const list = $("pluginList");
+      if (!list) return;
+      list.innerHTML = "";
+      PLUGIN_DEFS.forEach((p) => {
+        const enabled = Boolean(state.plugins[p.id]);
+        const connected = isPluginConnected(p.id);
+        const card = document.createElement("div");
+        card.className = `plugin-card ${enabled ? "enabled" : ""}`;
+        card.innerHTML = `
+          <div class="plugin-head">
+            <span class="plugin-title">${escapeHtml(p.name)} <span style="font-family:var(--mono);font-size:11px;color:var(--accent);">${escapeHtml(p.handle)}</span></span>
+            <button class="toggle-p-btn ${enabled ? "ok-active" : ""}" style="padding:3px 8px;font-size:10.5px;">${enabled ? "ON" : "OFF"}</button>
+          </div>
+          <div class="plugin-desc">${escapeHtml(p.desc)}</div>
+          <div class="plugin-conn-row">
+            <span class="plugin-status-pill ${connected ? "connected" : ""}">${connected ? "● Connected" : "○ Not Connected"}</span>
+            <div style="display:flex;gap:5px;">
+              <button class="conn-p-btn primary" style="padding:4px 9px;font-size:11px;">${connected ? "Reconnect" : "Connect"}</button>
+              ${connected ? `<button class="disc-p-btn danger" style="padding:4px 7px;font-size:10.5px;">&times;</button>` : ""}
+            </div>
+          </div>
+          <div class="plugin-quick-row"></div>
+        `;
+        card.querySelector(".toggle-p-btn").addEventListener("click", () => {
+          state.plugins[p.id] = !state.plugins[p.id];
+          saveLocalPrefs();
+          renderPluginsSidebar();
+        });
+        card.querySelector(".conn-p-btn").addEventListener("click", () => connectPlugin(p.id));
+        const discBtn = card.querySelector(".disc-p-btn");
+        if (discBtn) discBtn.addEventListener("click", () => disconnectPlugin(p.id));
+
+        const qRow = card.querySelector(".plugin-quick-row");
+        p.quick.forEach((q) => {
+          const qb = document.createElement("button");
+          qb.textContent = q.label;
+          qb.addEventListener("click", () => {
+            $("chatInput").value = q.prompt;
+            handleSend();
+            if (isMobileViewport()) toggleSidebar(false);
+          });
+          qRow.appendChild(qb);
+        });
+        list.appendChild(card);
+      });
+    }
+
+    function addPluginActionCard(msgDiv, title, url, alsoRunOnDevice = false) {
+      const card = document.createElement("div");
+      card.className = "plugin-action-card";
+      card.innerHTML = `
+        <span style="font-size:12px;font-weight:700;color:#bae6fd;">${escapeHtml(title)}</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+            <button class="primary" style="padding:5px 10px;font-size:11.5px;">Open Here</button>
+          </a>
+          <button class="send-dev-url-btn" style="padding:5px 10px;font-size:11.5px;">Open on Device</button>
+        </div>
+      `;
+      card.querySelector(".send-dev-url-btn").addEventListener("click", () => {
+        dispatchDeviceCommandWithGuardrail({
+          action: "open_url",
+          params: { url },
+          explanation: `Open ${title} on selected device`
+        });
+      });
+      msgDiv.appendChild(card);
+      if (alsoRunOnDevice && state.mode !== "online") {
+        dispatchDeviceCommandWithGuardrail({
+          action: "open_url",
+          params: { url },
+          explanation: `Open ${title} on target device`
+        });
+      }
+    }
+
+    // ================= @PLUGIN & /COMMAND AUTOCOMPLETE POPUP =================
+    let suggestItems = [];
+    let suggestIndex = 0;
+
+    function hideSuggestPopup() {
+      const pop = $("suggestPopup");
+      if (pop) {
+        pop.classList.remove("open");
+        pop.innerHTML = "";
+      }
+      suggestItems = [];
+      suggestIndex = 0;
+    }
+
+    function applySuggestItem(item) {
+      const inp = $("chatInput");
+      const val = inp.value;
+      if (item.kind === "slash") {
+        inp.value = item.insert;
+      } else {
+        inp.value = val.replace(/@[a-zA-Z0-9_-]*$/, item.insert);
+      }
+      hideSuggestPopup();
+      inp.focus();
+      if (item.autoSend) handleSend();
+    }
+
+    function updateSuggestPopup() {
+      const inp = $("chatInput");
+      const pop = $("suggestPopup");
+      if (!inp || !pop) return;
+      const val = inp.value;
+
+      if (val.startsWith("/") && !val.includes(" ")) {
+        const q = val.slice(1).toLowerCase();
+        const matches = SLASH_COMMANDS.filter((c) => c.cmd.slice(1).includes(q) || c.desc.toLowerCase().includes(q));
+        if (matches.length === 0) { hideSuggestPopup(); return; }
+        suggestItems = matches.map((c) => ({
+          kind: "slash",
+          label: c.cmd,
+          desc: c.desc,
+          badge: "CMD",
+          badgeOff: false,
+          insert: c.insert,
+          autoSend: ["/status", "/new", "/clear", "/help"].includes(c.cmd)
+        }));
+        suggestIndex = 0;
+        renderSuggestPopup("ULTRON Commands (/)");
+        return;
+      }
+
+      const atMatch = val.match(/(?:^|\s)@([a-zA-Z0-9_-]*)$/);
+      if (atMatch) {
+        const q = atMatch[1].toLowerCase();
+        const matches = PLUGIN_DEFS.filter((p) => p.id.includes(q) || p.name.toLowerCase().includes(q));
+        if (matches.length === 0) { hideSuggestPopup(); return; }
+        suggestItems = matches.map((p) => {
+          const conn = isPluginConnected(p.id);
+          return {
+            kind: "plugin",
+            label: p.handle,
+            desc: p.desc,
+            badge: conn ? "Connected" : "Connect",
+            badgeOff: !conn,
+            insert: p.handle + " ",
+            autoSend: false
+          };
+        });
+        suggestIndex = 0;
+        renderSuggestPopup("Plugins (@) — Pick a plugin and tell it what to do");
+        return;
+      }
+
+      hideSuggestPopup();
+    }
+
+    function renderSuggestPopup(headerText) {
+      const pop = $("suggestPopup");
+      pop.innerHTML = `<div class="suggest-header">${escapeHtml(headerText)}</div>`;
+      suggestItems.forEach((item, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `suggest-item ${idx === suggestIndex ? "selected" : ""}`;
+        btn.innerHTML = `
+          <div class="suggest-left">
+            <span class="suggest-cmd">${escapeHtml(item.label)}</span>
+            <span class="suggest-desc">${escapeHtml(item.desc)}</span>
+          </div>
+          <span class="suggest-badge ${item.badgeOff ? "off" : ""}">${escapeHtml(item.badge)}</span>
+        `;
+        btn.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          applySuggestItem(item);
+        });
+        pop.appendChild(btn);
+      });
+      pop.classList.add("open");
+    }
+
+    // ================= EXECUTE /SLASH COMMANDS =================
+    async function tryHandleSlashCommand(text) {
+      if (!text.startsWith("/")) return false;
+      const parts = text.trim().split(/\s+/);
+      const cmd = parts[0].toLowerCase();
+      const rest = text.trim().slice(cmd.length).trim();
+
+      if (cmd === "/new") { createNewChat(true); return true; }
+      if (cmd === "/clear") {
+        const chat = ensureActiveChat();
+        chat.messages = [];
+        state.chatHistory = [];
+        saveLocalPrefs();
+        renderActiveChatMessages();
+        return true;
+      }
+      if (cmd === "/help") {
+        addChatMessage("bot", [
+          "ULTRON Commands (type / to autocomplete):",
+          ...SLASH_COMMANDS.map((c) => `• ${c.cmd} — ${c.desc}`),
+          "",
+          "ULTRON Plugins (type @ to autocomplete):",
+          ...PLUGIN_DEFS.map((p) => `• ${p.handle} — ${p.desc} (${isPluginConnected(p.id) ? "Connected" : "Click Connect in Plugins tab"})`)
+        ].join("\n"), { route: "Help" });
+        return true;
+      }
+      if (cmd === "/status") {
+        const target = resolveTargetDevice();
+        dispatchDeviceCommandWithGuardrail({ action: "system_info", params: {}, explanation: `Check status of ${target.name}` }, target);
+        return true;
+      }
+      if (cmd === "/pc") {
+        const pcDev = resolveTargetDevice("PC");
+        if (!rest) { addChatMessage("bot", "Usage: /pc open file explorer  or  /pc status", { route: "PC Command" }); return true; }
+        dispatchDeviceCommandWithGuardrail(parseDeviceCommandFallback(rest, pcDev), pcDev);
+        return true;
+      }
+      if (cmd === "/phone") {
+        const phDev = resolveTargetDevice("Phone");
+        if (!rest) { addChatMessage("bot", "Usage: /phone battery  or  /phone open gmail", { route: "Phone Command" }); return true; }
+        dispatchDeviceCommandWithGuardrail(parseDeviceCommandFallback(rest, phDev), phDev);
+        return true;
+      }
+      if (cmd === "/call") {
+        const phDev = resolveTargetDevice("Phone");
+        dispatchDeviceCommandWithGuardrail({ action: "call_contact", params: { query: rest }, explanation: `Call ${rest} on ${phDev.name}` }, phDev);
+        return true;
+      }
+      if (cmd === "/play") {
+        const phDev = resolveTargetDevice("Phone");
+        const mode = /runner|subway|temple/i.test(rest) ? "runner" : "clicker";
+        dispatchDeviceCommandWithGuardrail({ action: "play_game", params: { game: rest || "game", autoplay: true, mode, durationSec: 45 }, explanation: `Launch & auto-play ${rest || "game"} on ${phDev.name}` }, phDev);
+        return true;
+      }
+      if (cmd === "/open") {
+        const target = resolveTargetDevice();
+        const isUrl = /^https?:\/\//i.test(rest);
+        dispatchDeviceCommandWithGuardrail(
+          isUrl ? { action: "open_url", params: { url: rest }, explanation: `Open ${rest}` }
+                : { action: "open_app", params: { app: rest }, explanation: `Launch ${rest}` },
+          target
+        );
+        return true;
+      }
+      if (cmd === "/build" || cmd === "/apk") {
+        const pcDev = resolveTargetDevice("PC");
+        const promptText = cmd === "/apk" ? `Build Android Studio APK project: ${rest}` : `Build full project: ${rest}`;
+        await runAutonomousProjectBuilder(promptText, pcDev, null);
+        return true;
+      }
+      return false;
+    }
+
+    // ================= EXECUTE @PLUGIN COMMANDS =================
+    async function tryHandlePluginCommand(text) {
+      const lower = text.toLowerCase();
+      const explicitMatch = text.match(/(?:^|\s)@(canva|drive|gmail|github|youtube)\b\s*([\s\S]*)/i);
+      const explicitPlugin = explicitMatch ? explicitMatch[1].toLowerCase() : null;
+      const task = explicitMatch ? explicitMatch[2].trim() : text;
+
+      // 1. @CANVA
+      if ((explicitPlugin === "canva") || (!explicitPlugin && state.plugins.canva && /\bcanva\b/i.test(lower))) {
+        const tLower = task.toLowerCase();
+        if (state.canvaToken && /\b(list|my designs|show|search|find)\b/i.test(tLower)) {
+          try {
+            const q = task.replace(/\b(list|my|designs|show|search|find|in|on)\b/gi, "").trim();
+            const apiUrl = `https://api.canva.com/rest/v1/designs${q ? `?query=${encodeURIComponent(q)}` : ""}`;
+            const res = await fetch(apiUrl, { headers: { Authorization: `Bearer ${state.canvaToken}` } });
+            if (res.ok) {
+              const data = await res.json();
+              const items = data.items || [];
+              const lines = items.length
+                ? items.slice(0, 10).map((d) => `• ${d.title || "Untitled"} — ${d.urls?.edit_url || d.urls?.view_url || ""}`).join("\n")
+                : "No Canva designs found.";
+              addChatMessage("bot", `Canva Connected Designs:\n\n${lines}`, { route: "Plugin • @canva API" });
+              return true;
+            }
+          } catch (_) {}
+        }
+
+        let url = "https://www.canva.com/";
+        let title = "Canva Workspace";
+        if (/presentation|slide|deck|ppt/i.test(tLower)) { url = "https://www.canva.com/create/presentations/"; title = "Canva Presentation Creator"; }
+        else if (/poster/i.test(tLower)) { url = "https://www.canva.com/create/posters/"; title = "Canva Poster Creator"; }
+        else if (/logo/i.test(tLower)) { url = "https://www.canva.com/create/logos/"; title = "Canva Logo Creator"; }
+        else if (/instagram|post|story/i.test(tLower)) { url = "https://www.canva.com/create/instagram-posts/"; title = "Canva Instagram Post"; }
+        else if (/resume|cv/i.test(tLower)) { url = "https://www.canva.com/create/resumes/"; title = "Canva Resume Builder"; }
+        else if (/video|reel/i.test(tLower)) { url = "https://www.canva.com/create/videos/"; title = "Canva Video Editor"; }
+        else if (/my designs|projects|list/i.test(tLower)) { url = "https://www.canva.com/projects"; title = "My Canva Designs"; }
+        else if (task.length > 2) {
+          url = `https://www.canva.com/templates/?query=${encodeURIComponent(task)}`;
+          title = `Canva Templates: ${task}`;
+        }
+
+        let extraBrief = "";
+        if (state.geminiApiKey && task.length > 3 && /\b(create|make|design|build|poster|presentation|logo|post|resume)\b/i.test(tLower)) {
+          try {
+            const res = await callGeminiInstant("Generate a concise, ready-to-paste Canva design brief (Title, Headline, 3-5 bullet points/slides, Color Palette HEX codes, Font pairing) for the user's request.", task, null, 1200);
+            if (res?.text) extraBrief = "\n\n" + res.text;
+          } catch (_) {}
+        }
+
+        const msgDiv = addChatMessage("bot", `@canva -> ${title}\n${url}${extraBrief}`, { route: "Plugin • @canva" });
+        addPluginActionCard(msgDiv, title, url, state.mode === "device");
+        return true;
+      }
+
+      // 2. @DRIVE
+      if ((explicitPlugin === "drive") || (!explicitPlugin && state.plugins.drive && /\b(google\s+drive|my\s+drive|google\s+doc|google\s+sheet)\b/i.test(lower))) {
+        const tLower = task.toLowerCase();
+        if (/\b(create|new|make)\s+(a\s+)?(google\s+)?(doc|document|note|file)\b/i.test(tLower)) {
+          const title = task.replace(/.*?\b(doc|document|note|file)\b\s*(called|named|about|:)?\s*/i, "").trim() || "ULTRON Document";
+          if (state.googleAccessToken) {
+            try {
+              const res = await fetch("https://www.googleapis.com/drive/v3/files?fields=id,name,webViewLink", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${state.googleAccessToken}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ name: title, mimeType: "application/vnd.google-apps.document" })
+              });
+              if (res.ok) {
+                const created = await res.json();
+                const link = created.webViewLink || `https://docs.google.com/document/d/${created.id}/edit`;
+                const div = addChatMessage("bot", `✅ Created Google Doc "${created.name}" directly in your Google Drive!\n${link}`, { route: "Plugin • @drive API" });
+                addPluginActionCard(div, `Open "${created.name}"`, link, state.mode === "device");
+                return true;
+              }
+            } catch (_) {}
+          }
+          const div = addChatMessage("bot", `@drive -> Creating new Google Doc ("${title}"):\nhttps://docs.new\n(Tip: Click "Connect" on Google Drive in ☰ Menu -> Plugins to create files automatically via Drive API.)`, { route: "Plugin • @drive" });
+          addPluginActionCard(div, "New Google Doc", "https://docs.new", state.mode === "device");
+          return true;
+        }
+
+        if (/\b(create|new|make)\s+(a\s+)?(google\s+)?sheet\b/i.test(tLower)) {
+          const div = addChatMessage("bot", `@drive -> Creating new Google Sheet:\nhttps://sheets.new`, { route: "Plugin • @drive" });
+          addPluginActionCard(div, "New Google Sheet", "https://sheets.new", state.mode === "device");
+          return true;
+        }
+
+        const query = task.replace(/\b(list|show|recent|my|files|search|find|for|in|on|google|drive)\b/gi, "").trim();
+        if (state.googleAccessToken) {
+          try {
+            const qParam = query ? `&q=${encodeURIComponent(`name contains '${query.replace(/'/g, "")}' and trashed = false`)}` : "&q=trashed=false";
+            const res = await fetch(`https://www.googleapis.com/drive/v3/files?pageSize=12&orderBy=modifiedTime desc&fields=files(id,name,mimeType,webViewLink)${qParam}`, {
+              headers: { Authorization: `Bearer ${state.googleAccessToken}` }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const files = data.files || [];
+              const lines = files.length
+                ? files.map((f) => `• ${f.name} — ${f.webViewLink || `https://drive.google.com/file/d/${f.id}/view`}`).join("\n")
+                : "No matching files found in your Google Drive.";
+              addChatMessage("bot", `Google Drive${query ? ` results for "${query}"` : " (Recent Files)"}:\n\n${lines}`, { route: "Plugin • @drive API" });
+              return true;
+            }
+          } catch (_) {}
+        }
+
+        const driveUrl = query ? `https://drive.google.com/drive/search?q=${encodeURIComponent(query)}` : "https://drive.google.com/drive/my-drive";
+        const div = addChatMessage("bot", `@drive -> ${query ? `Search "${query}"` : "My Drive"}\n${driveUrl}\n(Click "Connect" on Google Drive in ☰ Menu -> Plugins to list files directly inside ULTRON.)`, { route: "Plugin • @drive" });
+        addPluginActionCard(div, query ? `Drive Search: ${query}` : "Open Google Drive", driveUrl, state.mode === "device");
+        return true;
+      }
+
+      // 3. @GMAIL
+      if ((explicitPlugin === "gmail") || (!explicitPlugin && state.plugins.gmail && /\b(compose|draft|write|send|check)\s+(an?\s+)?(email|mail|gmail|inbox)\b/i.test(lower))) {
+        const tLower = task.toLowerCase();
+        if (state.gmailAccessToken && /\b(check|read|list|latest|recent|inbox|search|find)\b/i.test(tLower)) {
+          try {
+            const q = task.replace(/\b(check|read|list|latest|recent|my|inbox|emails|email|mail|gmail|search|find|for)\b/gi, "").trim();
+            const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=6${q ? `&q=${encodeURIComponent(q)}` : ""}`, {
+              headers: { Authorization: `Bearer ${state.gmailAccessToken}` }
+            });
+            if (listRes.ok) {
+              const listData = await listRes.json();
+              const msgs = listData.messages || [];
+              if (msgs.length === 0) {
+                addChatMessage("bot", `No Gmail messages found${q ? ` for "${q}"` : ""}.`, { route: "Plugin • @gmail API" });
+                return true;
+              }
+              const details = await Promise.all(msgs.map(async (m) => {
+                const r = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject`, {
+                  headers: { Authorization: `Bearer ${state.gmailAccessToken}` }
+                });
+                const d = await r.json();
+                const hdrs = d.payload?.headers || [];
+                const from = hdrs.find((h) => h.name === "From")?.value || "Unknown";
+                const subj = hdrs.find((h) => h.name === "Subject")?.value || "(No Subject)";
+                return `• ${subj}\n  From: ${from}`;
+              }));
+              addChatMessage("bot", `Gmail Inbox${q ? ` ("${q}")` : ""}:\n\n${details.join("\n\n")}`, { route: "Plugin • @gmail API" });
+              return true;
+            }
+          } catch (_) {}
+        }
+
+        const toMatch = task.match(/\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/);
+        const to = toMatch ? toMatch[1] : "";
+        const subjMatch = task.match(/subject\s*[:\-]?\s*["']?([^"'\n]+)["']?/i);
+        const su = subjMatch ? subjMatch[1].trim() : "Message from ULTRON";
+        const url = /\b(inbox|check|read|open)\b/i.test(tLower) && !to
+          ? "https://mail.google.com/mail/u/0/#inbox"
+          : `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(su)}`;
+        const div = addChatMessage("bot", `@gmail -> ${to ? `Compose to ${to}` : "Open Gmail"}\n${url}\n(Click "Connect" on Gmail in ☰ Menu -> Plugins to read real emails inside chat.)`, { route: "Plugin • @gmail" });
+        addPluginActionCard(div, to ? `Email ${to}` : "Open Gmail", url, state.mode === "device");
+        return true;
+      }
+
+      // 4. @GITHUB
+      if ((explicitPlugin === "github") || (!explicitPlugin && state.plugins.github && /\b(github|my\s+repos|repositories)\b/i.test(lower) && /\b(list|show|check|get|search|repos|repositories)\b/i.test(lower))) {
+        const user = (state.githubUser || "aymanchowdhury1").trim();
+        const tLower = task.toLowerCase();
+        const headers = { Accept: "application/vnd.github+json" };
+        if (state.githubToken) headers.Authorization = `Bearer ${state.githubToken}`;
+
+        if (/\bcreate\s+repo\b/i.test(tLower) && state.githubToken) {
+          const repoName = task.replace(/.*?\bcreate\s+repo\b\s*/i, "").trim().replace(/\s+/g, "-");
+          if (repoName) {
+            const res = await fetch("https://api.github.com/user/repos", {
+              method: "POST",
+              headers: { ...headers, "Content-Type": "application/json" },
+              body: JSON.stringify({ name: repoName, private: false })
+            });
+            const created = await res.json();
+            if (res.ok) {
+              const div = addChatMessage("bot", `✅ Created GitHub repository "${created.full_name}"!\n${created.html_url}`, { route: "Plugin • @github API" });
+              addPluginActionCard(div, created.name, created.html_url, false);
+              return true;
+            }
+          }
+        }
+
+        try {
+          const res = await fetch(`https://api.github.com/users/${encodeURIComponent(user)}/repos?sort=updated&per_page=10`, { headers });
+          const repos = await res.json();
+          if (Array.isArray(repos) && repos.length > 0) {
+            const lines = repos.map((r) => `• ${r.name} (${r.language || "Web"}) — ${r.html_url}`).join("\n");
+            const div = addChatMessage("bot", `GitHub Repositories for @${user}:\n\n${lines}`, { route: "Plugin • @github API" });
+            addPluginActionCard(div, `GitHub: ${user}`, `https://github.com/${user}`, false);
+            return true;
+          }
+        } catch (_) {}
+        const div = addChatMessage("bot", `@github -> https://github.com/${user}`, { route: "Plugin • @github" });
+        addPluginActionCard(div, `GitHub: ${user}`, `https://github.com/${user}`, state.mode === "device");
+        return true;
+      }
+
+      // 5. @YOUTUBE
+      if ((explicitPlugin === "youtube") || (!explicitPlugin && state.plugins.youtube && /\byoutube\b/i.test(lower) && /\b(play|search|watch|find|open)\b/i.test(lower))) {
+        const q = task.replace(/\b(play|search|watch|find|open|on|youtube|video|for|me)\b/gi, "").trim();
+        if (state.youtubeApiKey && q) {
+          try {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(q)}&key=${encodeURIComponent(state.youtubeApiKey)}`);
+            if (res.ok) {
+              const data = await res.json();
+              const vids = data.items || [];
+              if (vids.length > 0) {
+                const lines = vids.map((v) => `• ${v.snippet.title} — https://www.youtube.com/watch?v=${v.id.videoId}`).join("\n");
+                const firstUrl = `https://www.youtube.com/watch?v=${vids[0].id.videoId}`;
+                const div = addChatMessage("bot", `YouTube Results for "${q}":\n\n${lines}`, { route: "Plugin • @youtube API" });
+                addPluginActionCard(div, `Play: ${vids[0].snippet.title}`, firstUrl, state.mode !== "online");
+                return true;
+              }
+            }
+          } catch (_) {}
+        }
+        const url = q ? `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}` : "https://www.youtube.com";
+        const div = addChatMessage("bot", `@youtube -> ${q ? `Searching "${q}"` : "YouTube Home"}\n${url}`, { route: "Plugin • @youtube" });
+        addPluginActionCard(div, q ? `YouTube: ${q}` : "Open YouTube", url, state.mode !== "online");
+        return true;
+      }
+
+      return false;
+    }
+
+    function switchSidebarTab(tabName) {
+      state.activeSidebarTab = tabName;
+      document.querySelectorAll("#sidebarTabs button").forEach((b) => {
+        b.classList.toggle("active", b.dataset.stab === tabName);
+      });
+      document.querySelectorAll(".sidebar-pane").forEach((p) => {
+        p.classList.toggle("active", p.id === `stab-${tabName}`);
+      });
+    }
+
+    // ================= EVENT WIRING =================
+    $("googleLoginBtn").addEventListener("click", handleGoogleLogin);
+
+    $("signOutBtn").addEventListener("click", async () => {
+      if (state.firebaseReady) {
+        try { await firebase.auth().signOut(); } catch (_) {}
+      }
+      state.user = null;
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      if (authSyncTimer) clearInterval(authSyncTimer);
+      $("appShell").style.display = "none";
+      $("authGate").style.display = "flex";
+      setGateStatus("Signed out. Sign in with Google to unlock ULTRON again.");
+    });
+
+    $("toggleSidebarBtn").addEventListener("click", () => toggleSidebar());
+    $("activeModelChip").addEventListener("click", () => { switchSidebarTab("models"); toggleSidebar(true); });
+    $("newChatBtn").addEventListener("click", () => { createNewChat(true); if (isMobileViewport()) toggleSidebar(false); });
+    document.querySelectorAll("#sidebarTabs button").forEach((b) => b.addEventListener("click", () => switchSidebarTab(b.dataset.stab)));
+    $("closeSidebarBtn").addEventListener("click", () => toggleSidebar(false));
+    $("sidebarBackdrop").addEventListener("click", () => toggleSidebar(false));
+    window.addEventListener("resize", applySidebarState);
+
+    $("modelSearchInput").addEventListener("input", renderModelSidebar);
+    $("refreshModelsBtn").addEventListener("click", () => fetchAvailableModelsFromApi(false));
+    $("applyCustomModelBtn").addEventListener("click", () => {
+      const v = $("customModelQuickInput").value.trim();
+      if (!v) return;
+      $("customModelQuickInput").value = "";
+      selectModel(v, true);
+    });
+    $("customModelQuickInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") $("applyCustomModelBtn").click();
+    });
+
+    $("permToggleBtn").addEventListener("click", () => {
+      state.permissionMode = state.permissionMode === "ask" ? "allow_all" : "ask";
+      saveLocalPrefs();
+      renderPermissionBtn();
+    });
+
+    document.querySelectorAll("#modeSwitch button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.mode = btn.dataset.mode;
+        saveLocalPrefs();
+        renderModeSwitch();
+      });
+    });
+
+    $("targetDeviceSelect").addEventListener("change", (e) => {
+      state.targetDeviceId = e.target.value;
+      saveLocalPrefs();
+      renderDevicesUI();
+    });
+
+    $("sendBtn").addEventListener("click", handleSend);
+    $("chatInput").addEventListener("keydown", (e) => {
+      const popOpen = $("suggestPopup")?.classList.contains("open") && suggestItems.length > 0;
+      if (popOpen) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          suggestIndex = (suggestIndex + 1) % suggestItems.length;
+          renderSuggestPopup($("suggestPopup").querySelector(".suggest-header")?.textContent || "");
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          suggestIndex = (suggestIndex - 1 + suggestItems.length) % suggestItems.length;
+          renderSuggestPopup($("suggestPopup").querySelector(".suggest-header")?.textContent || "");
+          return;
+        }
+        if (e.key === "Tab" || (e.key === "Enter" && !e.shiftKey)) {
+          e.preventDefault();
+          applySuggestItem(suggestItems[suggestIndex]);
+          return;
+        }
+        if (e.key === "Escape") {
+          hideSuggestPopup();
+          return;
+        }
+      }
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        hideSuggestPopup();
+        handleSend();
+      }
+    });
+    $("chatInput").addEventListener("input", (e) => {
+      e.target.style.height = "auto";
+      e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px";
+      updateSuggestPopup();
+    });
+    $("chatInput").addEventListener("blur", () => setTimeout(hideSuggestPopup, 180));
+
+    $("attachBtn").addEventListener("click", () => $("chatFileInput").click());
+    $("chatFileInput").addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        const base64 = result.includes(",") ? result.split(",")[1] : "";
+        state.attachment = { name: file.name, mimeType: file.type, base64 };
+        $("attachName").textContent = `Attached: ${file.name}`;
+        $("attachPreview").style.display = "inline-flex";
+      };
+      reader.readAsDataURL(file);
+    });
+    $("clearAttachBtn").addEventListener("click", () => {
+      state.attachment = null;
+      $("chatFileInput").value = "";
+      $("attachPreview").style.display = "none";
+    });
+
+    $("voiceBtn").addEventListener("click", () => {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        addChatMessage("bot", "Voice input requires Chrome or Edge browser.", { route: "Voice" });
+        return;
+      }
+      const r = new SR();
+      r.lang = "en-US";
+      r.onresult = (ev) => {
+        $("chatInput").value = ev.results[0][0].transcript;
+        handleSend();
+      };
+      r.start();
+    });
+
+    $("openSettingsBtn").addEventListener("click", () => {
+      populateSettingsFields();
+      $("settingsModal").classList.add("open");
+    });
+    $("closeSettingsBtn").addEventListener("click", () => $("settingsModal").classList.remove("open"));
+    $("downloadAgentConfigBtn").addEventListener("click", downloadAgentConfig);
+
+    $("saveSettingsBtn").addEventListener("click", () => {
+      const prevKey = state.geminiApiKey;
+      state.geminiApiKey = $("geminiApiKey").value.trim();
+      state.thisDeviceName = $("thisDeviceName").value.trim() || state.thisDeviceName;
+      state.thisDeviceType = $("thisDeviceType").value;
+      state.pcBridgeUrl = $("pcBridgeUrl").value.trim();
+      state.bridgeToken = $("bridgeToken").value.trim();
+      state.pcWorkDir = $("pcWorkDir").value.trim() || "D:\\ULTRON_Workspace";
+      if ($("githubUserInput")) state.githubUser = $("githubUserInput").value.trim() || "aymanchowdhury1";
+      if ($("githubTokenInput")) state.githubToken = $("githubTokenInput").value.trim();
+
+      saveLocalPrefs();
+      saveCloudSettings();
+      sendHeartbeat();
+      syncAuthToLocalPcBridge();
+      pingLocalPcBridge();
+      renderDevicesUI();
+      $("settingsModal").classList.remove("open");
+      addChatMessage("bot", `Settings saved. Active Model: ${state.geminiModel}.`, { route: "Settings" });
+
+      if (state.geminiApiKey && state.geminiApiKey !== prevKey) {
+        fetchAvailableModelsFromApi(true);
+      }
+    });
+
+    // Boot
+    loadLocalPrefs();
+    renderModeSwitch();
+    renderPermissionBtn();
+    renderModelSidebar();
+    applySidebarState();
+
+    async function tryAndroidApkBridgeSession() {
+      if (!window.UltronAndroid || typeof window.UltronAndroid.getSessionJson !== "function") return false;
+      try {
+        const raw = window.UltronAndroid.getSessionJson();
+        if (!raw) return false;
+        const sess = JSON.parse(raw);
+        if (!sess.uid) return false;
+        const fakeUser = {
+          uid: sess.uid,
+          displayName: sess.ownerName || "Ayman Chowdhury",
+          email: sess.email || "owner@ultron.local",
+          photoURL: "",
+          refreshToken: sess.refreshToken || "",
+          getIdToken: async () => sess.idToken || ""
+        };
+        await startSignedInSession(fakeUser);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    if (initFirebase()) {
+      firebase.auth().getRedirectResult().then((res) => {
+        if (res?.credential?.accessToken) { state.googleAccessToken = res.credential.accessToken; }
+      }).catch((err) => {
+        if (err?.message) setGateStatus("Google Sign-In redirect error: " + err.message, true);
+      });
+
+      tryAndroidApkBridgeSession().then((unlockedByApk) => {
+        if (unlockedByApk) return;
+        firebase.auth().onAuthStateChanged((user) => {
+          if (user) {
+            startSignedInSession(user);
+          } else {
+            $("appShell").style.display = "none";
+            $("authGate").style.display = "flex";
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>
